@@ -1,0 +1,106 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "System user (Manager or Member)",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["manager", "member"] },
+        "fcm_token": { "type": "string" },
+        "advance_balance": { "type": "number" },
+        "sonsthapon": { "type": "number" }
+      },
+      "required": ["uid", "name", "email", "role", "advance_balance", "sonsthapon"]
+    },
+    "Month": {
+      "title": "Month",
+      "description": "Monthly accounting record",
+      "type": "object",
+      "properties": {
+        "month_id": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "closed"] },
+        "fixed_costs": {
+          "type": "object"
+        },
+        "total_meals": { "type": "number" },
+        "total_bazar": { "type": "number" },
+        "meal_rate": { "type": "number" }
+      },
+      "required": ["month_id", "status", "total_meals", "total_bazar", "meal_rate"]
+    },
+    "DailyMeal": {
+      "title": "Daily Meal",
+      "description": "Daily meal record for a user",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string" },
+        "user_id": { "type": "string" },
+        "meal_count": { "type": "number" }
+      },
+      "required": ["date", "user_id", "meal_count"]
+    },
+    "BazarFund": {
+      "title": "Bazar Fund",
+      "description": "Contributions to the bazar fund",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string" },
+        "user_id": { "type": "string" },
+        "amount_contributed": { "type": "number" }
+      },
+      "required": ["date", "user_id", "amount_contributed"]
+    },
+    "BazarExpense": {
+      "title": "Bazar Expense",
+      "description": "Daily bazar expenses",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string" },
+        "user_id": { "type": "string" },
+        "amount_spent": { "type": "number" },
+        "items_description": { "type": "string" },
+        "expense_type": { "type": "string", "enum": ["from_fund", "personal"] }
+      },
+      "required": ["date", "user_id", "amount_spent", "items_description", "expense_type"]
+    },
+    "BazarSchedule": {
+      "title": "Bazar Schedule",
+      "description": "Schedule for daily bazar",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string" },
+        "assigned_user_id": { "type": "string" }
+      },
+      "required": ["date", "assigned_user_id"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profiles"
+    },
+    "/months/{monthId}": {
+      "schema": { "$ref": "#/entities/Month" },
+      "description": "Monthly accounting records"
+    },
+    "/daily_meals/{mealId}": {
+      "schema": { "$ref": "#/entities/DailyMeal" },
+      "description": "Daily meals"
+    },
+    "/bazar_fund/{fundId}": {
+      "schema": { "$ref": "#/entities/BazarFund" },
+      "description": "Contributions to the bazar fund"
+    },
+    "/bazar_expenses/{expenseId}": {
+      "schema": { "$ref": "#/entities/BazarExpense" },
+      "description": "Daily bazar expenses"
+    },
+    "/bazar_schedule/{scheduleId}": {
+      "schema": { "$ref": "#/entities/BazarSchedule" },
+      "description": "Schedule for daily bazar"
+    }
+  }
+}

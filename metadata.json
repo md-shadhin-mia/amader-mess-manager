@@ -1,0 +1,8 @@
+{
+  "name": "Mess Manager (Meal & Expense)",
+  "description": "Meal/Mess Management System with Bengali/English support, automated calculations, and Firebase backend.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
