@@ -51,7 +51,12 @@ export const translations = {
     openEntry: 'এন্ট্রি দিন',
     backDashboard: 'ড্যাশবোর্ডে ফিরুন',
     entryDescription: 'আজকের মিল ও বাজারের তথ্য আলাদা পেজ থেকে যোগ করুন।',
-    myMealEntry: 'নিজের মিল এন্ট্রি'
+    myMealEntry: 'নিজের মিল এন্ট্রি',
+    removeAdmin: 'অ্যাডমিন সরান',
+    adminRemoved: 'অ্যাডমিনের ভূমিকা সরানো হয়েছে!',
+    primaryAdmin: 'মূল অ্যাডমিন',
+    primaryAdminProtected: 'মূল অ্যাডমিনকে সরানো যাবে না।',
+    lastAdminProtected: 'অন্তত একজন অ্যাডমিন থাকা জরুরি।'
   },
   en: {
     appTitle: 'Mess Manager',
@@ -105,7 +110,12 @@ export const translations = {
     openEntry: 'Add Entry',
     backDashboard: 'Back to dashboard',
     entryDescription: 'Add today\'s meal and bazar details from a separate page.',
-    myMealEntry: 'My Meal Entry'
+    myMealEntry: 'My Meal Entry',
+    removeAdmin: 'Remove Admin',
+    adminRemoved: 'Admin role has been removed!',
+    primaryAdmin: 'Primary admin',
+    primaryAdminProtected: 'The primary admin cannot be removed.',
+    lastAdminProtected: 'At least one admin is required.'
   }
 };
 

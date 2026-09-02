@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { auth, db } from '../firebase';
 import { useState, useEffect } from 'react';
-import { collection, query, getDocs, doc, setDoc, updateDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { collection, query, getDoc, getDocs, doc, setDoc, updateDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { useLanguage } from '../contexts/LanguageContext';
 import ProfileModal from '../components/ProfileModal';
 
@@ -12,6 +12,7 @@ export default function AdminDashboard() {
   const { t, lang, setLang } = useLanguage();
   const navigate = useNavigate();
   const [users, setUsers] = useState<any[]>([]);
+  const [primaryAdminUid, setPrimaryAdminUid] = useState<string | null>(null);
   const [activeMonth, setActiveMonth] = useState<any>(null);
   const [showProfile, setShowProfile] = useState(false);
   const [costs, setCosts] = useState({
@@ -21,6 +22,10 @@ export default function AdminDashboard() {
   useEffect(() => {
     const usersUnsub = onSnapshot(query(collection(db, 'users')), (snap) => {
       setUsers(snap.docs.map(d => ({ id: d.id, ...d.data() as any })));
+    });
+
+    void getDoc(doc(db, 'settings', 'app')).then((snapshot) => {
+      setPrimaryAdminUid(snapshot.data()?.firstAdminUid ?? null);
     });
 
     const monthsUnsub = onSnapshot(query(collection(db, 'months')), (snap) => {
@@ -51,6 +56,26 @@ export default function AdminDashboard() {
     } catch (err) {
       console.error('Could not update the member role:', err);
       alert('Failed to make this user an admin.');
+    }
+  };
+
+  const removeAdmin = async (member: any) => {
+    if (member.id === primaryAdminUid) {
+      alert(t('primaryAdminProtected'));
+      return;
+    }
+    if (users.filter((user) => user.role === 'manager').length <= 1) {
+      alert(t('lastAdminProtected'));
+      return;
+    }
+    if (!confirm(`${member.name} কে সাধারণ সদস্য করতে চান?`)) return;
+
+    try {
+      await updateDoc(doc(db, 'users', member.id), { role: 'member' });
+      alert(t('adminRemoved'));
+    } catch (err) {
+      console.error('Could not remove the admin role:', err);
+      alert('Failed to remove this admin.');
     }
   };
 
@@ -250,10 +275,16 @@ export default function AdminDashboard() {
                     <td className="p-4 text-gray-700 font-medium">{u.advance_balance} ৳</td>
                     <td className="p-4 text-gray-700 font-medium">{u.sonsthapon} ৳</td>
                     <td className="p-4">
-                      {u.role !== 'manager' && (
+                      {u.role !== 'manager' ? (
                         <button onClick={() => makeAdmin(u)} className="text-sm font-medium text-blue-600 hover:text-blue-800">
                           {t('makeAdmin')}
                         </button>
+                      ) : u.id !== primaryAdminUid ? (
+                        <button onClick={() => removeAdmin(u)} className="text-sm font-medium text-red-600 hover:text-red-800">
+                          {t('removeAdmin')}
+                        </button>
+                      ) : (
+                        <span className="text-xs text-gray-400">{t('primaryAdmin')}</span>
                       )}
                     </td>
                   </tr>
