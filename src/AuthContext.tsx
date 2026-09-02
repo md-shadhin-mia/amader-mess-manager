@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { auth, db } from './firebase';
 
 export interface UserProfile {
@@ -43,24 +43,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       try {
         if (user) {
-          // Fetch or create user profile
           const userRef = doc(db, 'users', user.uid);
-          const userSnap = await getDoc(userRef);
+          const bootstrapRef = doc(db, 'settings', 'app');
+          const [userSnap, bootstrapSnap] = await Promise.all([
+            getDoc(userRef),
+            getDoc(bootstrapRef),
+          ]);
 
           if (userSnap.exists()) {
-            setUserProfile(userSnap.data() as UserProfile);
+            const profile = userSnap.data() as UserProfile;
+            // During migration, the first existing user to sign in becomes the first admin.
+            if (!bootstrapSnap.exists()) {
+              const batch = writeBatch(db);
+              batch.set(bootstrapRef, {
+                firstAdminUid: user.uid,
+                createdAt: serverTimestamp(),
+              });
+              if (profile.role !== 'manager') {
+                batch.update(userRef, { role: 'manager' });
+                profile.role = 'manager';
+              }
+              await batch.commit();
+            }
+            setUserProfile(profile);
           } else {
-            // If first time login, create a default member profile.
+            const role: UserProfile['role'] = bootstrapSnap.exists() ? 'member' : 'manager';
             const newProfile: UserProfile = {
               uid: user.uid,
               name: user.displayName || 'New User',
               email: user.email || '',
               phone: user.phoneNumber || '',
-              role: 'member',
+              role,
               advance_balance: 0,
               sonsthapon: 0,
             };
-            await setDoc(userRef, newProfile);
+
+            if (role === 'manager') {
+              const batch = writeBatch(db);
+              batch.set(bootstrapRef, {
+                firstAdminUid: user.uid,
+                createdAt: serverTimestamp(),
+              });
+              batch.set(userRef, newProfile);
+              await batch.commit();
+            } else {
+              await setDoc(userRef, newProfile);
+            }
             setUserProfile(newProfile);
           }
         } else {

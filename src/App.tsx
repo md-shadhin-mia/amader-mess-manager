@@ -5,6 +5,7 @@ import { LanguageProvider } from './contexts/LanguageContext';
 import Login from './pages/Login';
 import AdminDashboard from './pages/AdminDashboard';
 import MemberDashboard from './pages/MemberDashboard';
+import MealEntry from './pages/MealEntry';
 
 function ProfileLoadError({ message }: { message: string }) {
   return <div className="h-screen w-full flex items-center justify-center p-4 text-center text-red-600">{message}</div>;
@@ -54,9 +55,14 @@ export default function App() {
                 <AdminDashboard />
               </PrivateRoute>
             } />
-            <Route path="/member/*" element={
+            <Route path="/member" element={
               <PrivateRoute allowedRole="member">
                 <MemberDashboard />
+              </PrivateRoute>
+            } />
+            <Route path="/member/entry" element={
+              <PrivateRoute allowedRole="member">
+                <MealEntry />
               </PrivateRoute>
             } />
             <Route path="/" element={<RoleBasedRedirect />} />

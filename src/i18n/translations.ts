@@ -42,7 +42,15 @@ export const translations = {
     profileUpdated: 'প্রোফাইল আপডেট হয়েছে!',
     editProfile: 'প্রোফাইল এডিট করুন',
     close: 'বন্ধ করুন',
-    ledgerSummary: 'আপনার হিসাব'
+    ledgerSummary: 'আপনার হিসাব',
+    optional: 'ঐচ্ছিক',
+    actions: 'কাজ',
+    makeAdmin: 'অ্যাডমিন বানান',
+    adminMade: 'ব্যবহারকারীকে অ্যাডমিন করা হয়েছে!',
+    mealEntryPage: 'মিল ও বাজার এন্ট্রি',
+    openEntry: 'এন্ট্রি দিন',
+    backDashboard: 'ড্যাশবোর্ডে ফিরুন',
+    entryDescription: 'আজকের মিল ও বাজারের তথ্য আলাদা পেজ থেকে যোগ করুন।'
   },
   en: {
     appTitle: 'Mess Manager',
@@ -87,7 +95,15 @@ export const translations = {
     profileUpdated: 'Profile updated!',
     editProfile: 'Edit Profile',
     close: 'Close',
-    ledgerSummary: 'Personal Ledger'
+    ledgerSummary: 'Personal Ledger',
+    optional: 'Optional',
+    actions: 'Actions',
+    makeAdmin: 'Make Admin',
+    adminMade: 'User has been made an admin!',
+    mealEntryPage: 'Meal & Bazar Entry',
+    openEntry: 'Add Entry',
+    backDashboard: 'Back to dashboard',
+    entryDescription: 'Add today\'s meal and bazar details from a separate page.'
   }
 };
 

@@ -2,29 +2,51 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    function isSignedIn() { return request.auth != null; }
-    
-    // Check if the user is a manager
-    function isManager() {
-      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'manager';
+    function isSignedIn() {
+      return request.auth != null;
     }
 
-    match /{document=**} {
-      allow read, write: if false;
+    function isManager() {
+      return isSignedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'manager';
+    }
+
+    // Valid only for the atomic first-login batch that creates this document.
+    function isFirstAdmin() {
+      return isSignedIn()
+        && getAfter(/databases/$(database)/documents/settings/app).data.firstAdminUid == request.auth.uid;
+    }
+
+    match /settings/app {
+      allow get: if isSignedIn();
+      allow create: if isSignedIn()
+        && !exists(/databases/$(database)/documents/settings/app)
+        && request.resource.data.firstAdminUid == request.auth.uid;
+      allow update, delete: if false;
     }
 
     match /users/{userId} {
-      // Users can read all users (to see who is in the mess)
       allow read: if isSignedIn();
-      // Allow users to create their own basic profile, managers can create anyone
-      allow create: if isManager() || (isSignedIn() && request.auth.uid == userId);
-      allow update: if isManager() || (isSignedIn() && request.auth.uid == userId);
+      allow create: if isSignedIn()
+        && request.auth.uid == userId
+        && (request.resource.data.role == 'member'
+          || (request.resource.data.role == 'manager' && isFirstAdmin()));
+      // Members may edit their name and optional phone number, but never their role.
+      allow update: if isManager()
+        || (isSignedIn()
+          && request.auth.uid == userId
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'phone']))
+        // Allows the first already-existing user to become the bootstrap admin in one batch.
+        || (isSignedIn()
+          && request.auth.uid == userId
+          && isFirstAdmin()
+          && request.resource.data.role == 'manager'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role']));
       allow delete: if isManager();
     }
 
     match /months/{monthId} {
       allow read: if isSignedIn();
-      // Only manager can create/update months
       allow write: if isManager();
     }
 

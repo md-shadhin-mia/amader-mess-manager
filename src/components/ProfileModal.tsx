@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useAuth } from '../AuthContext';
 import { db } from '../firebase';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -17,7 +17,7 @@ export default function ProfileModal({ onClose }: ProfileModalProps) {
 
   if (!userProfile) return null;
 
-  const handleSave = async (e: React.FormEvent) => {
+  const handleSave = async (e: FormEvent) => {
     e.preventDefault();
     setSaving(true);
     try {
@@ -55,13 +55,12 @@ export default function ProfileModal({ onClose }: ProfileModalProps) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t('phone')}</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('phone')} ({t('optional')})</label>
             <input 
               type="tel" 
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-              required
             />
           </div>
           <button 

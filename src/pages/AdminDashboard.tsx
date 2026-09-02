@@ -39,11 +39,18 @@ export default function AdminDashboard() {
     };
   }, []);
 
-  useEffect(() => {
-    if (userProfile && (!userProfile.phone || !userProfile.name)) {
-      setShowProfile(true);
+  const makeAdmin = async (member: any) => {
+    if (member.role === 'manager') return;
+    if (!confirm(`${member.name} কে অ্যাডমিন বানাতে চান?`)) return;
+
+    try {
+      await updateDoc(doc(db, 'users', member.id), { role: 'manager' });
+      alert(t('adminMade'));
+    } catch (err) {
+      console.error('Could not update the member role:', err);
+      alert('Failed to make this user an admin.');
     }
-  }, [userProfile]);
+  };
 
   const handleUpdateCosts = async (e: FormEvent) => {
     e.preventDefault();
@@ -217,6 +224,7 @@ export default function AdminDashboard() {
                   <th className="p-4 font-medium">{t('role')}</th>
                   <th className="p-4 font-medium">{t('advance')}</th>
                   <th className="p-4 font-medium">{t('sonsthapon')}</th>
+                  <th className="p-4 font-medium">{t('actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -232,6 +240,13 @@ export default function AdminDashboard() {
                     </td>
                     <td className="p-4 text-gray-700 font-medium">{u.advance_balance} ৳</td>
                     <td className="p-4 text-gray-700 font-medium">{u.sonsthapon} ৳</td>
+                    <td className="p-4">
+                      {u.role !== 'manager' && (
+                        <button onClick={() => makeAdmin(u)} className="text-sm font-medium text-blue-600 hover:text-blue-800">
+                          {t('makeAdmin')}
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
