@@ -21,7 +21,11 @@ function PrivateRoute({ children, allowedRole }: { children: ReactNode, allowedR
     return <Navigate to="/login" />;
   }
 
-  if (allowedRole && userProfile?.role !== allowedRole) {
+  const hasAllowedRole = !allowedRole
+    || userProfile?.role === allowedRole
+    || (allowedRole === 'member' && userProfile?.role === 'manager');
+
+  if (!hasAllowedRole) {
     return <Navigate to="/" />;
   }
 

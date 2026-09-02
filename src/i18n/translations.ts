@@ -50,7 +50,8 @@ export const translations = {
     mealEntryPage: 'মিল ও বাজার এন্ট্রি',
     openEntry: 'এন্ট্রি দিন',
     backDashboard: 'ড্যাশবোর্ডে ফিরুন',
-    entryDescription: 'আজকের মিল ও বাজারের তথ্য আলাদা পেজ থেকে যোগ করুন।'
+    entryDescription: 'আজকের মিল ও বাজারের তথ্য আলাদা পেজ থেকে যোগ করুন।',
+    myMealEntry: 'নিজের মিল এন্ট্রি'
   },
   en: {
     appTitle: 'Mess Manager',
@@ -103,7 +104,8 @@ export const translations = {
     mealEntryPage: 'Meal & Bazar Entry',
     openEntry: 'Add Entry',
     backDashboard: 'Back to dashboard',
-    entryDescription: 'Add today\'s meal and bazar details from a separate page.'
+    entryDescription: 'Add today\'s meal and bazar details from a separate page.',
+    myMealEntry: 'My Meal Entry'
   }
 };
 

@@ -1,4 +1,5 @@
 import type { FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { auth, db } from '../firebase';
 import { useState, useEffect } from 'react';
@@ -9,6 +10,7 @@ import ProfileModal from '../components/ProfileModal';
 export default function AdminDashboard() {
   const { userProfile } = useAuth();
   const { t, lang, setLang } = useLanguage();
+  const navigate = useNavigate();
   const [users, setUsers] = useState<any[]>([]);
   const [activeMonth, setActiveMonth] = useState<any>(null);
   const [showProfile, setShowProfile] = useState(false);
@@ -132,6 +134,13 @@ export default function AdminDashboard() {
         </div>
         
         <div className="flex items-center gap-4">
+          <button
+            onClick={() => navigate('/member/entry')}
+            className="text-sm font-medium bg-blue-800 px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+          >
+            {t('myMealEntry')}
+          </button>
+
           <button 
             onClick={() => setShowProfile(true)}
             className="text-sm font-medium text-blue-200 hover:text-white"

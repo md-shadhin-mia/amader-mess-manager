@@ -51,7 +51,7 @@ export default function MealEntry() {
           <p className="text-sm text-gray-500">{userProfile?.name}</p>
         </div>
         <div className="flex gap-3">
-          <button onClick={() => navigate('/member')} className="text-sm font-medium text-blue-600 hover:text-blue-700">
+          <button onClick={() => navigate(userProfile?.role === 'manager' ? '/admin' : '/member')} className="text-sm font-medium text-blue-600 hover:text-blue-700">
             {t('backDashboard')}
           </button>
           <button onClick={() => auth.signOut()} className="text-sm font-medium text-red-600 hover:text-red-700">
