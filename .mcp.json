@@ -6,6 +6,16 @@
         "-y",
         "@playwright/mcp@latest"
       ]
+    },
+    "firebase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "firebase-tools@latest",
+        "mcp",
+        "--dir",
+        "."
+      ]
     }
   }
 }
