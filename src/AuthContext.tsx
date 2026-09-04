@@ -1,119 +1,94 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { onAuthStateChanged, type User } from 'firebase/auth';
+import { getDoc, onSnapshot, serverTimestamp, setDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
+import { userRef } from './lib/paths';
+import type { Account } from './lib/tenant';
 
-export interface UserProfile {
-  uid: string;
-  name: string;
-  email: string;
-  phone: string;
-  role: 'manager' | 'member';
-  advance_balance: number;
-  sonsthapon: number;
-  /** Monthly room rent set by the manager. Each roommate can have a different amount. */
-  room_rent?: number;
-  /** Firebase Cloud Messaging token of the last browser that enabled push. */
-  fcm_token?: string;
-}
+/** @deprecated kept as an alias for old imports; tenant profiles are `Member` from lib/tenant. */
+export type UserProfile = Account;
 
 interface AuthContextType {
   currentUser: User | null;
-  userProfile: UserProfile | null;
+  /** Global account document (users/{uid}); membership data lives on the mess. */
+  account: Account | null;
+  /** From the `super_admin` custom claim, set only by scripts/set-super-admin.ts. */
+  isSuperAdmin: boolean;
   loading: boolean;
   error: string | null;
 }
 
-const AuthContext = createContext<AuthContextType>({
-  currentUser: null,
-  userProfile: null,
-  loading: true,
-  error: null,
-});
+const AuthContext = createContext<AuthContextType>({ currentUser: null, account: null, isSuperAdmin: false, loading: true, error: null });
 
 export const useAuth = () => useContext(AuthContext);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [account, setAccount] = useState<Account | null>(null);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    let unsubscribeAccount: (() => void) | null = null;
+
+    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
+      unsubscribeAccount?.();
+      unsubscribeAccount = null;
       setCurrentUser(user);
-      setLoading(true);
       setError(null);
 
+      if (!user) {
+        setAccount(null);
+        setIsSuperAdmin(false);
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
       try {
-        if (user) {
-          const userRef = doc(db, 'users', user.uid);
-          const bootstrapRef = doc(db, 'settings', 'app');
-          const [userSnap, bootstrapSnap] = await Promise.all([
-            getDoc(userRef),
-            getDoc(bootstrapRef),
-          ]);
+        const claims = (await user.getIdTokenResult()).claims;
+        setIsSuperAdmin(claims.super_admin === true);
 
-          if (userSnap.exists()) {
-            const profile = userSnap.data() as UserProfile;
-            // During migration, the first existing user to sign in becomes the first admin.
-            if (!bootstrapSnap.exists()) {
-              const batch = writeBatch(db);
-              batch.set(bootstrapRef, {
-                firstAdminUid: user.uid,
-                createdAt: serverTimestamp(),
-              });
-              if (profile.role !== 'manager') {
-                batch.update(userRef, { role: 'manager' });
-                profile.role = 'manager';
-              }
-              await batch.commit();
-            }
-            setUserProfile(profile);
-          } else {
-            const role: UserProfile['role'] = bootstrapSnap.exists() ? 'member' : 'manager';
-            const newProfile: UserProfile = {
-              uid: user.uid,
-              name: user.displayName || 'New User',
-              email: user.email || '',
-              phone: user.phoneNumber || '',
-              role,
-              advance_balance: 0,
-              sonsthapon: 0,
-              room_rent: 0,
-            };
-
-            if (role === 'manager') {
-              const batch = writeBatch(db);
-              batch.set(bootstrapRef, {
-                firstAdminUid: user.uid,
-                createdAt: serverTimestamp(),
-              });
-              batch.set(userRef, newProfile);
-              await batch.commit();
-            } else {
-              await setDoc(userRef, newProfile);
-            }
-            setUserProfile(newProfile);
-          }
-        } else {
-          setUserProfile(null);
+        const ref = userRef(db, user.uid);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) {
+          const fresh: Account = {
+            uid: user.uid,
+            name: user.displayName || 'New User',
+            email: user.email || '',
+            phone: user.phoneNumber || '',
+            messes: {},
+            current_mess_id: null,
+          };
+          await setDoc(ref, { ...fresh, created_at: serverTimestamp() });
         }
+
+        unsubscribeAccount = onSnapshot(
+          ref,
+          (live) => {
+            setAccount(live.exists() ? (live.data() as Account) : null);
+            setLoading(false);
+          },
+          (err) => {
+            console.error('Account subscription failed', err);
+            setError('Could not load your account. Please try again.');
+            setLoading(false);
+          },
+        );
       } catch (err) {
-        console.error('Could not load the user profile from Firestore.', err);
-        setUserProfile(null);
+        console.error('Could not load the account from Firestore.', err);
+        setAccount(null);
         setError('Could not load your profile. Please ensure Cloud Firestore is set up and try again.');
-      } finally {
         setLoading(false);
       }
     });
 
-    return unsubscribe;
+    return () => {
+      unsubscribeAuth();
+      unsubscribeAccount?.();
+    };
   }, []);
 
-  return (
-    <AuthContext.Provider value={{ currentUser, userProfile, loading, error }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={{ currentUser, account, isSuperAdmin, loading, error }}>{children}</AuthContext.Provider>;
 }

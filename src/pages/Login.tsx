@@ -46,6 +46,7 @@ export default function Login() {
             <h1 className="text-2xl font-semibold text-gray-900 mb-2">
               {t('appTitle')}
             </h1>
+            <p className="text-sm text-gray-500">{t('loginPitch')}</p>
           </div>
           
           {error && (

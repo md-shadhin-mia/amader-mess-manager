@@ -1,10 +1,12 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { doc, updateDoc } from 'firebase/firestore';
+import { updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
+import { useMess } from '../../contexts/MessContext';
+import { messDoc } from '../../lib/paths';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useToast } from '../../contexts/ToastContext';
 import type { MonthDoc } from '../../hooks/useMonths';
-import type { UserDoc } from '../../hooks/useUsers';
+import type { MemberDoc } from '../../hooks/useMembers';
 import { isSharedAmountCategory, type CostCategory } from '../../lib/costCategories';
 import { labelOf } from '../../lib/labels';
 import { formatTk, parseAmount } from '../../lib/numbers';
@@ -12,7 +14,7 @@ import { formatTk, parseAmount } from '../../lib/numbers';
 interface Props {
   month: MonthDoc;
   categories: CostCategory[];
-  users: UserDoc[];
+  users: MemberDoc[];
 }
 
 const WEIGHTS: { value: number; key: 'weightFull' | 'weightHalf' | 'weightNone' }[] = [
@@ -29,6 +31,7 @@ const WEIGHTS: { value: number; key: 'weightFull' | 'weightHalf' | 'weightNone' 
 export default function MonthCostsForm({ month, categories, users }: Props) {
   const { t, lang } = useLanguage();
   const { toast } = useToast();
+  const messId = useMess().messId ?? '';
   const [fixed, setFixed] = useState<Record<string, string>>({});
   const [memberCosts, setMemberCosts] = useState<Record<string, Record<string, string>>>({});
   const [weights, setWeights] = useState<Record<string, number>>({});
@@ -65,7 +68,7 @@ export default function MonthCostsForm({ month, categories, users }: Props) {
     }
     setSaving(true);
     try {
-      await updateDoc(doc(db, 'months', month.id), { fixed_costs: fixedOut, member_costs: memberOut, member_weights: weights });
+      await updateDoc(messDoc(db, messId, 'months', month.id), { fixed_costs: fixedOut, member_costs: memberOut, member_weights: weights });
       toast(t('monthCostsSaved'));
     } catch (err) {
       console.error(err);

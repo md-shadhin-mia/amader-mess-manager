@@ -1,9 +1,11 @@
 import { useState, type FormEvent } from 'react';
-import { deleteDoc, doc, setDoc, updateDoc, writeBatch } from 'firebase/firestore';
+import { deleteDoc, setDoc, updateDoc, writeBatch } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useToast } from '../../contexts/ToastContext';
-import { COST_CATEGORIES_COLLECTION, type CostCategory, type CostTiming, type SplitRule } from '../../lib/costCategories';
+import { useMess } from '../../contexts/MessContext';
+import { messDoc } from '../../lib/paths';
+import { type CostCategory, type CostTiming, type SplitRule } from '../../lib/costCategories';
 import { slugify } from '../../lib/labels';
 
 interface Props {
@@ -19,6 +21,7 @@ type Draft = Pick<CostCategory, 'label_bn' | 'label_en' | 'split_rule' | 'timing
 export default function CategoryManager({ categories }: Props) {
   const { t } = useLanguage();
   const { toast } = useToast();
+  const messId = useMess().messId ?? '';
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const [adding, setAdding] = useState(false);
   const [newItem, setNewItem] = useState<Draft>({ label_bn: '', label_en: '', split_rule: 'equal', timing: 'postpaid' });
@@ -40,7 +43,7 @@ export default function CategoryManager({ categories }: Props) {
     }
     setBusy(category.id);
     try {
-      await updateDoc(doc(db, COST_CATEGORIES_COLLECTION, category.id), {
+      await updateDoc(messDoc(db, messId, 'cost_categories', category.id), {
         label_bn: draft.label_bn.trim(),
         label_en: draft.label_en.trim(),
         split_rule: category.builtin ? category.split_rule : draft.split_rule,
@@ -61,7 +64,7 @@ export default function CategoryManager({ categories }: Props) {
   };
 
   const toggleActive = async (category: CostCategory) => {
-    await updateDoc(doc(db, COST_CATEGORIES_COLLECTION, category.id), { active: !category.active });
+    await updateDoc(messDoc(db, messId, 'cost_categories', category.id), { active: !category.active });
   };
 
   const move = async (index: number, direction: -1 | 1) => {
@@ -72,15 +75,15 @@ export default function CategoryManager({ categories }: Props) {
     // Ensure distinct orders even when two rows share a value.
     const a = current.sort_order;
     const b = other.sort_order === a ? a + direction : other.sort_order;
-    batch.update(doc(db, COST_CATEGORIES_COLLECTION, current.id), { sort_order: b });
-    batch.update(doc(db, COST_CATEGORIES_COLLECTION, other.id), { sort_order: a });
+    batch.update(messDoc(db, messId, 'cost_categories', current.id), { sort_order: b });
+    batch.update(messDoc(db, messId, 'cost_categories', other.id), { sort_order: a });
     await batch.commit();
   };
 
   const remove = async (category: CostCategory) => {
     if (category.builtin) return;
     if (!confirm(`${t('deleteCategoryConfirm')} (${category.label_en})`)) return;
-    await deleteDoc(doc(db, COST_CATEGORIES_COLLECTION, category.id));
+    await deleteDoc(messDoc(db, messId, 'cost_categories', category.id));
     toast(t('deleted'));
   };
 
@@ -97,7 +100,7 @@ export default function CategoryManager({ categories }: Props) {
     const sort_order = (categories.at(-1)?.sort_order ?? 0) + 10;
     setBusy('new');
     try {
-      await setDoc(doc(db, COST_CATEGORIES_COLLECTION, id), { label_bn, label_en, split_rule: newItem.split_rule, timing: newItem.timing, sort_order, active: true });
+      await setDoc(messDoc(db, messId, 'cost_categories', id), { label_bn, label_en, split_rule: newItem.split_rule, timing: newItem.timing, sort_order, active: true });
       setNewItem({ label_bn: '', label_en: '', split_rule: 'equal', timing: 'postpaid' });
       setAdding(false);
       toast(t('categoryAdded'));

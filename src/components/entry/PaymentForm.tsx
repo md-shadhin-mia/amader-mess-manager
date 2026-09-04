@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../firebase';
+import { useMess } from '../../contexts/MessContext';
+import { messCol } from '../../lib/paths';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useToast } from '../../contexts/ToastContext';
 import type { PaymentPurpose } from '../../hooks/useMonthEntries';
@@ -17,6 +19,7 @@ interface Props {
 export default function PaymentForm({ uid, date, disabled }: Props) {
   const { t } = useLanguage();
   const { toast } = useToast();
+  const messId = useMess().messId ?? '';
   const [purpose, setPurpose] = useState<PaymentPurpose>('fund_deposit');
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
@@ -28,7 +31,7 @@ export default function PaymentForm({ uid, date, disabled }: Props) {
     if (value === null || value <= 0) return toast(t('invalidAmount'), { tone: 'error' });
     setSaving(true);
     try {
-      await addDoc(collection(db, 'payments'), {
+      await addDoc(messCol(db, messId, 'payments'), {
         date,
         user_id: uid,
         amount: value,

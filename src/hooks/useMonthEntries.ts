@@ -1,6 +1,8 @@
-import { collection, query, where } from 'firebase/firestore';
+import { query, where } from 'firebase/firestore';
 import { db } from '../firebase';
+import { useMess } from '../contexts/MessContext';
 import { monthRange } from '../lib/dates';
+import { messCol, type TenantCollection } from '../lib/paths';
 import { useCollection, type Doc } from './useCollection';
 
 export interface MealDoc {
@@ -46,13 +48,14 @@ export interface MonthEntries {
 
 /** Live meals, bazar expenses and payments for one month, via single-field range queries on `date`. */
 export function useMonthEntries(monthId: string | null): MonthEntries {
+  const { messId } = useMess();
   const range = monthId ? monthRange(monthId) : null;
-  const make = (name: string) => () =>
-    range ? query(collection(db, name), where('date', '>=', range.start), where('date', '<=', range.end)) : null;
+  const make = (name: TenantCollection) => () =>
+    range && messId ? query(messCol(db, messId, name), where('date', '>=', range.start), where('date', '<=', range.end)) : null;
 
-  const meals = useCollection<MealDoc>(make('daily_meals'), `daily_meals:${monthId}`);
-  const expenses = useCollection<ExpenseDoc>(make('bazar_expenses'), `bazar_expenses:${monthId}`);
-  const payments = useCollection<PaymentDoc>(make('payments'), `payments:${monthId}`);
+  const meals = useCollection<MealDoc>(make('daily_meals'), `daily_meals:${messId}:${monthId}`);
+  const expenses = useCollection<ExpenseDoc>(make('bazar_expenses'), `bazar_expenses:${messId}:${monthId}`);
+  const payments = useCollection<PaymentDoc>(make('payments'), `payments:${messId}:${monthId}`);
 
   return {
     meals: meals.docs,
@@ -64,9 +67,10 @@ export function useMonthEntries(monthId: string | null): MonthEntries {
 
 /** All payments still waiting for the manager, regardless of month. */
 export function usePendingPayments(): { pending: Doc<PaymentDoc>[]; loading: boolean } {
+  const { messId } = useMess();
   const { docs, loading } = useCollection<PaymentDoc>(
-    () => query(collection(db, 'payments'), where('status', '==', 'pending')),
-    'payments:pending',
+    () => (messId ? query(messCol(db, messId, 'payments'), where('status', '==', 'pending')) : null),
+    `payments:pending:${messId}`,
   );
   return { pending: [...docs].sort((a, b) => a.data.date.localeCompare(b.data.date)), loading };
 }

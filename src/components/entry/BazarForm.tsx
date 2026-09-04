@@ -1,6 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { addDoc, collection, doc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { addDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
+import { useMess } from '../../contexts/MessContext';
+import { messCol, messDoc } from '../../lib/paths';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useToast } from '../../contexts/ToastContext';
 import type { Doc } from '../../hooks/useCollection';
@@ -21,6 +23,7 @@ interface Props {
 export default function BazarForm({ uid, date, suggestions, editing, onDone, disabled }: Props) {
   const { t } = useLanguage();
   const { toast } = useToast();
+  const messId = useMess().messId ?? '';
   const [amount, setAmount] = useState('');
   const [items, setItems] = useState('');
   const [type, setType] = useState<'personal' | 'from_fund'>('personal');
@@ -55,10 +58,10 @@ export default function BazarForm({ uid, date, suggestions, editing, onDone, dis
     setSaving(true);
     try {
       if (editing) {
-        await updateDoc(doc(db, 'bazar_expenses', editing.id), { amount_spent: value, items_description: items.trim(), expense_type: type, updated_at: serverTimestamp() });
+        await updateDoc(messDoc(db, messId, 'bazar_expenses', editing.id), { amount_spent: value, items_description: items.trim(), expense_type: type, updated_at: serverTimestamp() });
         toast(t('bazarUpdated'));
       } else {
-        await addDoc(collection(db, 'bazar_expenses'), {
+        await addDoc(messCol(db, messId, 'bazar_expenses'), {
           date,
           user_id: uid,
           amount_spent: value,

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../firebase';
-import { useAuth } from '../AuthContext';
+import { useMess } from '../contexts/MessContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useActiveMonth } from '../hooks/useMonths';
 import { useMealTypes } from '../hooks/useMealTypes';
@@ -19,7 +19,7 @@ import DayEntries from '../components/entry/DayEntries';
  * chips and item autocomplete, deposits, and the day's entries with edit.
  */
 export default function MealEntry() {
-  const { userProfile } = useAuth();
+  const { member: userProfile } = useMess();
   const { t, lang } = useLanguage();
   const navigate = useNavigate();
   const { activeMonth } = useActiveMonth();

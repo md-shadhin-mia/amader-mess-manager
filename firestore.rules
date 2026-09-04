@@ -1,35 +1,60 @@
 rules_version = '2';
 
+// Multi-tenant layout: every mess lives under /messes/{messId}. Authorization
+// always comes from /messes/{messId}/members/{uid}; the users/{uid}.messes map
+// is a client-side index and is never trusted here. Super admins carry the
+// `super_admin` custom claim (set by scripts/set-super-admin.ts).
+//
+// The "Legacy" section at the bottom keeps the pre-tenant top-level
+// collections usable until the migration script has run; remove it afterwards.
+
 service cloud.firestore {
   match /databases/{database}/documents {
+    // ---------- helpers ----------
     function isSignedIn() {
       return request.auth != null;
     }
 
-    function isManager() {
+    function isSuperAdmin() {
+      return isSignedIn() && request.auth.token.get('super_admin', false) == true;
+    }
+
+    function messDoc(messId) {
+      return get(/databases/$(database)/documents/messes/$(messId)).data;
+    }
+
+    function messIsActive(messId) {
+      return messDoc(messId).status == 'active';
+    }
+
+    function myMemberPath(messId) {
+      return /databases/$(database)/documents/messes/$(messId)/members/$(request.auth.uid);
+    }
+
+    function isActiveMember(messId) {
       return isSignedIn()
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'manager';
+        && exists(myMemberPath(messId))
+        && get(myMemberPath(messId)).data.status == 'active';
     }
 
-    // Valid only for the atomic first-login batch that creates this document.
-    function isFirstAdmin() {
-      return isSignedIn()
-        && getAfter(/databases/$(database)/documents/settings/app).data.firstAdminUid == request.auth.uid;
+    function isManagerOf(messId) {
+      return isActiveMember(messId) && get(myMemberPath(messId)).data.role == 'manager';
     }
 
-    // The bootstrap admin cannot be demoted or deleted, so at least one admin remains.
-    function isPrimaryAdmin(userId) {
-      return exists(/databases/$(database)/documents/settings/app)
-        && get(/databases/$(database)/documents/settings/app).data.firstAdminUid == userId;
+    function canRead(messId) {
+      return isSuperAdmin() || isActiveMember(messId);
     }
 
-    // Entry docs (meals, bazar, payments) carry a 'YYYY-MM-DD' date. Members may
-    // only touch entries whose month has not been closed by the manager.
-    function monthIsOpen(dateId) {
+    // Managers may write only while the mess is active; suspended messes are read-only.
+    function managerWrite(messId) {
+      return isSuperAdmin() || (isManagerOf(messId) && messIsActive(messId));
+    }
+
+    function monthIsOpen(messId, dateId) {
       return dateId is string
         && dateId.size() >= 7
-        && (!exists(/databases/$(database)/documents/months/$(dateId[0:7]))
-          || get(/databases/$(database)/documents/months/$(dateId[0:7])).data.status == 'active');
+        && (!exists(/databases/$(database)/documents/messes/$(messId)/months/$(dateId[0:7]))
+          || get(/databases/$(database)/documents/messes/$(messId)/months/$(dateId[0:7])).data.status == 'active');
     }
 
     function ownsNew() {
@@ -40,105 +65,254 @@ service cloud.firestore {
       return isSignedIn() && resource.data.user_id == request.auth.uid;
     }
 
-    match /settings/app {
-      allow get: if isSignedIn();
-      allow create: if isSignedIn()
-        && !exists(/databases/$(database)/documents/settings/app)
-        && request.resource.data.firstAdminUid == request.auth.uid;
-      allow update, delete: if false;
+    function memberEntryWrite(messId, dateId) {
+      return isActiveMember(messId) && messIsActive(messId) && monthIsOpen(messId, dateId);
     }
 
+    // Joining: the code must point at this mess, the mess must be active, and
+    // the same batch must bump member_count by exactly one (checked both ways).
+    function joinedWithValidCode(messId) {
+      return request.resource.data.joined_with_code is string
+        && get(/databases/$(database)/documents/join_codes/$(request.resource.data.joined_with_code)).data.mess_id == messId
+        && messIsActive(messId)
+        && getAfter(/databases/$(database)/documents/messes/$(messId)).data.member_count == messDoc(messId).member_count + 1;
+    }
+
+    // ---------- global accounts ----------
     match /users/{userId} {
-      allow read: if isSignedIn();
+      allow get: if isSuperAdmin() || (isSignedIn() && request.auth.uid == userId);
+      allow list: if isSuperAdmin();
       allow create: if isSignedIn()
         && request.auth.uid == userId
-        && (request.resource.data.role == 'member'
-          || (request.resource.data.role == 'manager' && isFirstAdmin()));
-      // Members may edit their name, phone number and push token, but never their role.
-      // An admin can manage other roles but cannot demote the bootstrap admin.
-      allow update: if (isManager()
-          && (!isPrimaryAdmin(userId) || request.resource.data.role == 'manager'))
-        || (isSignedIn()
+        && request.resource.data.uid == userId
+        && !('super_admin' in request.resource.data);
+      allow update: if (isSignedIn()
           && request.auth.uid == userId
           && request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['name', 'phone', 'fcm_token', 'fcm_token_updated_at']))
-        // Allows the first already-existing user to become the bootstrap admin in one batch.
+            .hasOnly(['name', 'phone', 'fcm_token', 'fcm_token_updated_at', 'current_mess_id', 'messes', 'updated_at']))
+        // Legacy: a single-tenant manager may still edit other users until migration.
+        || (isLegacyManager()
+          && (!isLegacyPrimaryAdmin(userId) || request.resource.data.role == 'manager'));
+      allow delete: if false;
+    }
+
+    // ---------- join codes ----------
+    match /join_codes/{code} {
+      allow get: if isSignedIn();
+      allow list: if isSuperAdmin();
+      allow create: if isSuperAdmin()
         || (isSignedIn()
-          && request.auth.uid == userId
-          && isFirstAdmin()
-          && request.resource.data.role == 'manager'
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role']));
-      allow delete: if isManager() && !isPrimaryAdmin(userId);
+          && code.size() >= 8
+          && request.resource.data.created_by == request.auth.uid
+          && (isManagerOf(request.resource.data.mess_id)
+            // Founder batch: the mess is being created in this same write.
+            || getAfter(/databases/$(database)/documents/messes/$(request.resource.data.mess_id)).data.owner_uid == request.auth.uid));
+      allow update: if false;
+      allow delete: if isSuperAdmin() || isManagerOf(resource.data.mess_id);
     }
 
-    // Manager-defined cost categories (shared utilities, rent, ...) and meal types.
-    match /cost_categories/{categoryId} {
-      allow read: if isSignedIn();
-      allow write: if isManager();
+    // ---------- tenants ----------
+    match /messes/{messId} {
+      allow get: if canRead(messId);
+      allow list: if isSuperAdmin();
+      allow create: if isSignedIn()
+        && request.resource.data.owner_uid == request.auth.uid
+        && request.resource.data.plan == 'free'
+        && request.resource.data.status == 'active'
+        && request.resource.data.member_limit == 10
+        && request.resource.data.member_count == 1
+        && getAfter(/databases/$(database)/documents/messes/$(messId)/members/$(request.auth.uid)).data.role == 'manager';
+      allow update: if isSuperAdmin()
+        // Manager-editable settings. plan/status/member_limit/owner_uid are super-admin only.
+        || (isManagerOf(messId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'timezone', 'join_code', 'updated_at']))
+        // Manager removes a member (member doc set to 'left' in the same batch).
+        || (isManagerOf(messId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['member_count'])
+          && request.resource.data.member_count == resource.data.member_count - 1
+          && request.resource.data.member_count >= 1)
+        // A joining user (not yet a member) takes one seat.
+        || (isSignedIn()
+          && resource.data.status == 'active'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['member_count'])
+          && request.resource.data.member_count == resource.data.member_count + 1
+          && request.resource.data.member_count <= resource.data.member_limit
+          && !isActiveMember(messId)
+          && getAfter(/databases/$(database)/documents/messes/$(messId)/members/$(request.auth.uid)).data.status == 'active');
+      allow delete: if isSuperAdmin();
+
+      match /members/{uid} {
+        allow read: if canRead(messId);
+        allow create: if isSignedIn()
+          && request.auth.uid == uid
+          && request.resource.data.uid == uid
+          && request.resource.data.status == 'active'
+          && request.resource.data.advance_balance == 0
+          && request.resource.data.room_rent == 0
+          && (
+            (request.resource.data.role == 'manager'
+              && !exists(/databases/$(database)/documents/messes/$(messId))
+              && getAfter(/databases/$(database)/documents/messes/$(messId)).data.owner_uid == uid)
+            || (request.resource.data.role == 'member' && joinedWithValidCode(messId))
+          );
+        allow update: if isSuperAdmin()
+          // Manager: role, rent, advance, status of anyone; the owner can be neither demoted nor removed.
+          || (managerWrite(messId)
+            && request.resource.data.uid == resource.data.uid
+            && (uid != messDoc(messId).owner_uid
+              || (request.resource.data.role == 'manager' && request.resource.data.status == 'active')))
+          // Self: profile fields only.
+          || (isSignedIn()
+            && request.auth.uid == uid
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'phone', 'updated_at']))
+          // Rejoin after leaving, with the same checks as a fresh join.
+          || (isSignedIn()
+            && request.auth.uid == uid
+            && resource.data.status == 'left'
+            && request.resource.data.status == 'active'
+            && request.resource.data.role == 'member'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'role', 'joined_with_code', 'joined_at'])
+            && joinedWithValidCode(messId));
+        allow delete: if isSuperAdmin();
+      }
+
+      match /cost_categories/{id} {
+        allow read: if canRead(messId);
+        allow write: if managerWrite(messId);
+      }
+
+      match /meal_types/{id} {
+        allow read: if canRead(messId);
+        allow write: if managerWrite(messId);
+      }
+
+      match /bazar_schedule/{id} {
+        allow read: if canRead(messId);
+        allow write: if managerWrite(messId);
+      }
+
+      match /months/{monthId} {
+        allow read: if canRead(messId);
+        allow write: if managerWrite(messId);
+
+        match /settlements/{uid} {
+          allow get: if isSuperAdmin() || (isActiveMember(messId) && (request.auth.uid == uid || isManagerOf(messId)));
+          allow list, write: if managerWrite(messId);
+        }
+      }
+
+      match /daily_meals/{mealId} {
+        allow read: if canRead(messId);
+        // The id is pinned to the caller so nobody can overwrite another member's day.
+        allow create, update: if managerWrite(messId)
+          || (ownsNew()
+            && mealId == request.auth.uid + '_' + request.resource.data.date
+            && memberEntryWrite(messId, request.resource.data.date));
+        allow delete: if managerWrite(messId) || (ownsExisting() && memberEntryWrite(messId, resource.data.date));
+      }
+
+      match /bazar_expenses/{id} {
+        allow read: if canRead(messId);
+        allow create: if managerWrite(messId) || (ownsNew() && memberEntryWrite(messId, request.resource.data.date));
+        allow update: if managerWrite(messId)
+          || (ownsNew() && ownsExisting() && memberEntryWrite(messId, request.resource.data.date));
+        allow delete: if managerWrite(messId) || (ownsExisting() && memberEntryWrite(messId, resource.data.date));
+      }
+
+      match /payments/{id} {
+        allow read: if canRead(messId);
+        allow create: if managerWrite(messId)
+          || (ownsNew() && request.resource.data.status == 'pending' && memberEntryWrite(messId, request.resource.data.date));
+        allow update: if managerWrite(messId)
+          || (ownsExisting()
+            && resource.data.status == 'pending'
+            && request.resource.data.status == 'pending'
+            && request.resource.data.user_id == resource.data.user_id
+            && memberEntryWrite(messId, request.resource.data.date));
+        allow delete: if managerWrite(messId) || (ownsExisting() && resource.data.status == 'pending');
+      }
     }
 
-    match /meal_types/{typeId} {
+    // Written by the push-notification worker (service account). One doc per run.
+    match /notification_logs/{logId} {
+      allow read: if isSuperAdmin();
+      allow write: if false;
+    }
+
+    // ---------- Legacy single-tenant collections (remove after migration) ----------
+    function isLegacyManager() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', '') == 'manager';
+    }
+
+    function isLegacyPrimaryAdmin(userId) {
+      return exists(/databases/$(database)/documents/settings/app)
+        && get(/databases/$(database)/documents/settings/app).data.firstAdminUid == userId;
+    }
+
+    function legacyMonthIsOpen(dateId) {
+      return dateId is string
+        && dateId.size() >= 7
+        && (!exists(/databases/$(database)/documents/months/$(dateId[0:7]))
+          || get(/databases/$(database)/documents/months/$(dateId[0:7])).data.status == 'active');
+    }
+
+    match /settings/app {
+      allow get: if isSignedIn();
+      allow write: if false;
+    }
+
+    match /cost_categories/{id} {
       allow read: if isSignedIn();
-      allow write: if isManager();
+      allow write: if isLegacyManager();
+    }
+
+    match /meal_types/{id} {
+      allow read: if isSignedIn();
+      allow write: if isLegacyManager();
     }
 
     match /months/{monthId} {
       allow read: if isSignedIn();
-      allow write: if isManager();
-
-      // Per-member settlement rows written at month close. A member sees only their own.
+      allow write: if isLegacyManager();
       match /settlements/{userId} {
-        allow get: if isSignedIn() && (request.auth.uid == userId || isManager());
-        allow list, write: if isManager();
+        allow get: if isSignedIn() && (request.auth.uid == userId || isLegacyManager());
+        allow list, write: if isLegacyManager();
       }
     }
 
-    // Daily meals and bazar expenses: the manager may correct anything; a member
-    // may manage their own entries while the month is still open.
     match /daily_meals/{mealId} {
       allow read: if isSignedIn();
-      allow create, update: if isManager() || (ownsNew() && monthIsOpen(request.resource.data.date));
-      allow delete: if isManager() || (ownsExisting() && monthIsOpen(resource.data.date));
+      allow create, update: if isLegacyManager()
+        || (ownsNew() && mealId == request.auth.uid + '_' + request.resource.data.date && legacyMonthIsOpen(request.resource.data.date));
+      allow delete: if isLegacyManager() || (ownsExisting() && legacyMonthIsOpen(resource.data.date));
     }
 
-    match /bazar_expenses/{expenseId} {
+    match /bazar_expenses/{id} {
       allow read: if isSignedIn();
-      allow create, update: if isManager() || (ownsNew() && monthIsOpen(request.resource.data.date));
-      allow delete: if isManager() || (ownsExisting() && monthIsOpen(resource.data.date));
+      allow create: if isLegacyManager() || (ownsNew() && legacyMonthIsOpen(request.resource.data.date));
+      allow update: if isLegacyManager() || (ownsNew() && ownsExisting() && legacyMonthIsOpen(request.resource.data.date));
+      allow delete: if isLegacyManager() || (ownsExisting() && legacyMonthIsOpen(resource.data.date));
     }
 
-    // Money handed to the manager (fund deposits, prepaid rent, settlement).
-    // A member records a pending payment; only the manager can confirm or reject it.
-    match /payments/{paymentId} {
+    match /payments/{id} {
       allow read: if isSignedIn();
-      allow create: if isManager()
-        || (ownsNew()
-          && request.resource.data.status == 'pending'
-          && monthIsOpen(request.resource.data.date));
-      allow update: if isManager()
-        || (ownsExisting()
-          && resource.data.status == 'pending'
-          && request.resource.data.status == 'pending'
-          && request.resource.data.user_id == resource.data.user_id
-          && monthIsOpen(request.resource.data.date));
-      allow delete: if isManager() || (ownsExisting() && resource.data.status == 'pending');
+      allow create: if isLegacyManager() || (ownsNew() && request.resource.data.status == 'pending' && legacyMonthIsOpen(request.resource.data.date));
+      allow update: if isLegacyManager()
+        || (ownsExisting() && resource.data.status == 'pending' && request.resource.data.status == 'pending'
+          && request.resource.data.user_id == resource.data.user_id && legacyMonthIsOpen(request.resource.data.date));
+      allow delete: if isLegacyManager() || (ownsExisting() && resource.data.status == 'pending');
     }
 
-    // Legacy collection kept readable for old data; new deposits go to /payments.
-    match /bazar_fund/{fundId} {
+    match /bazar_fund/{id} {
       allow read: if isSignedIn();
-      allow write: if isManager();
+      allow write: if isLegacyManager();
     }
 
-    match /bazar_schedule/{scheduleId} {
+    match /bazar_schedule/{id} {
       allow read: if isSignedIn();
-      allow write: if isManager();
-    }
-
-    // Written only by the push-notification Cloudflare Worker (service account, bypasses rules).
-    match /notification_logs/{logId} {
-      allow read: if isManager();
-      allow write: if false;
+      allow write: if isLegacyManager();
     }
   }
 }

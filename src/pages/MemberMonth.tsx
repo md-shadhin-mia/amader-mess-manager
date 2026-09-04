@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { useAuth } from '../AuthContext';
+import { useMess } from '../contexts/MessContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useMonths } from '../hooks/useMonths';
 import { useMonthSettlement } from '../hooks/useMonthSettlement';
@@ -20,7 +20,7 @@ function Line({ label, value, strong, tone }: { label: string; value: string; st
 /** A member's own month breakdown: meals, every category share, credits, advance, and what is due. */
 export default function MemberMonth() {
   const { monthId: paramMonth } = useParams();
-  const { userProfile } = useAuth();
+  const { member: userProfile } = useMess();
   const { t, lang } = useLanguage();
   const navigate = useNavigate();
   const { months } = useMonths();

@@ -9,8 +9,8 @@ export interface Doc<T> {
 /**
  * Subscribes to a Firestore query for the lifetime of the component.
  * `key` must change whenever the query does (Firestore Query objects are not
- * referentially stable), otherwise the subscription would be re-created on
- * every render.
+ * referentially stable) and must include the mess id, so switching tenants
+ * re-subscribes and clears the previous tenant's rows immediately.
  */
 export function useCollection<T>(makeQuery: () => Query | null, key: string): { docs: Doc<T>[]; loading: boolean; error: string | null } {
   const [docs, setDocs] = useState<Doc<T>[]>([]);
@@ -18,9 +18,10 @@ export function useCollection<T>(makeQuery: () => Query | null, key: string): { 
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    setDocs([]);
+    setError(null);
     const q = makeQuery();
     if (!q) {
-      setDocs([]);
       setLoading(false);
       return;
     }
@@ -30,7 +31,6 @@ export function useCollection<T>(makeQuery: () => Query | null, key: string): { 
       (snapshot) => {
         setDocs(snapshot.docs.map((d) => ({ id: d.id, data: d.data() as T })));
         setLoading(false);
-        setError(null);
       },
       (err) => {
         console.error('Firestore subscription failed:', err);

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../firebase';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useMess } from '../contexts/MessContext';
 
 interface Props {
   title: string;
@@ -13,13 +14,17 @@ interface Props {
 /** Compact header for secondary pages (reports), hidden when printing. */
 export default function PageHeader({ title, subtitle, backTo, children }: Props) {
   const { t, lang, setLang } = useLanguage();
+  const { mess } = useMess();
   const navigate = useNavigate();
   return (
     <header className="bg-white border-b border-gray-200 px-4 md:px-6 py-3 flex flex-col md:flex-row md:items-center justify-between gap-3 sticky top-0 z-10 print:hidden">
       <div className="min-w-0">
         <button onClick={() => navigate(backTo)} className="text-xs font-medium text-blue-600 hover:text-blue-800">← {t('backDashboard')}</button>
         <h1 className="text-lg font-semibold text-gray-900 truncate">{title}</h1>
-        {subtitle && <p className="text-xs text-gray-500 truncate">{subtitle}</p>}
+        <p className="text-xs text-gray-500 truncate">
+          {mess && <button onClick={() => navigate('/messes')} className="text-blue-600 hover:underline mr-1">{mess.name}</button>}
+          {subtitle}
+        </p>
       </div>
       <div className="flex flex-wrap items-center gap-2">
         {children}

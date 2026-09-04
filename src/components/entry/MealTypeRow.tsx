@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { serverTimestamp, setDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
+import { useMess } from '../../contexts/MessContext';
+import { mealDocId, messDoc } from '../../lib/paths';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useToast } from '../../contexts/ToastContext';
 import type { MealDoc } from '../../hooks/useMonthEntries';
@@ -34,6 +36,7 @@ function presetLabel(preset: number, lang: 'bn' | 'en'): string {
 export default function MealTypeRow({ uid, date, mealTypes, current, disabled }: Props) {
   const { t, lang } = useLanguage();
   const { toast } = useToast();
+  const messId = useMess().messId ?? '';
   const [saving, setSaving] = useState<string | null>(null);
 
   // Legacy docs only carry meal_count; show it on the first type so nothing is hidden.
@@ -48,7 +51,7 @@ export default function MealTypeRow({ uid, date, mealTypes, current, disabled }:
     const previous = { ...currentMeals };
     try {
       await setDoc(
-        doc(db, 'daily_meals', `${uid}_${date}`),
+        messDoc(db, messId, 'daily_meals', mealDocId(uid, date)),
         { date, user_id: uid, meals: next, meal_count: mealCountOf(next, mealTypes), updated_at: serverTimestamp(), timestamp: serverTimestamp() },
         { merge: true },
       );
@@ -57,7 +60,7 @@ export default function MealTypeRow({ uid, date, mealTypes, current, disabled }:
           label: t('undo'),
           onClick: () => {
             void setDoc(
-              doc(db, 'daily_meals', `${uid}_${date}`),
+              messDoc(db, messId, 'daily_meals', mealDocId(uid, date)),
               { date, user_id: uid, meals: previous, meal_count: mealCountOf(previous, mealTypes), updated_at: serverTimestamp() },
               { merge: true },
             );

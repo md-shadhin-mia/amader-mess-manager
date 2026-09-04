@@ -1,19 +1,25 @@
-import { collection, doc, getDocs, writeBatch, type Firestore } from 'firebase/firestore';
+import { getDocs, writeBatch, type Firestore } from 'firebase/firestore';
 import { COST_CATEGORIES_COLLECTION, DEFAULT_COST_CATEGORIES, type CostCategory } from './defaults';
+import { messCol, messDoc } from './paths';
 
 export { COST_CATEGORIES_COLLECTION, DEFAULT_COST_CATEGORIES, ROOM_RENT_CATEGORY_ID } from './defaults';
 export type { CostCategory, CostTiming, SplitRule } from './defaults';
 
-/** Browser-side one-time seed, run by the first manager to open the dashboard. */
-export async function seedCostCategoriesIfEmpty(db: Firestore): Promise<boolean> {
-  const existing = await getDocs(collection(db, COST_CATEGORIES_COLLECTION));
+/** Rules read a few docs per write; keep seed batches small so a batch never nears the limit. */
+export const SEED_BATCH_SIZE = 8;
+
+/** Browser-side one-time seed for one mess. Writes only when the collection is empty. */
+export async function seedCostCategoriesIfEmpty(db: Firestore, messId: string): Promise<boolean> {
+  const existing = await getDocs(messCol(db, messId, 'cost_categories'));
   if (!existing.empty) return false;
-  const batch = writeBatch(db);
-  for (const category of DEFAULT_COST_CATEGORIES) {
-    const { id, ...data } = category;
-    batch.set(doc(db, COST_CATEGORIES_COLLECTION, id), data);
+  for (let i = 0; i < DEFAULT_COST_CATEGORIES.length; i += SEED_BATCH_SIZE) {
+    const batch = writeBatch(db);
+    for (const category of DEFAULT_COST_CATEGORIES.slice(i, i + SEED_BATCH_SIZE)) {
+      const { id, ...data } = category;
+      batch.set(messDoc(db, messId, 'cost_categories', id), data);
+    }
+    await batch.commit();
   }
-  await batch.commit();
   return true;
 }
 

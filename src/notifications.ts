@@ -1,7 +1,8 @@
 import { getMessaging, getToken, isSupported, onMessage, type Messaging } from 'firebase/messaging';
-import { doc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { serverTimestamp, updateDoc } from 'firebase/firestore';
 import { getApp } from 'firebase/app';
 import { auth, db } from './firebase';
+import { userRef } from './lib/paths';
 
 const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY;
 export const PUSH_WORKER_URL = (import.meta.env.VITE_PUSH_WORKER_URL || '').replace(/\/$/, '');
@@ -43,7 +44,7 @@ export async function enablePushNotifications(uid: string): Promise<string> {
   const token = await getToken(messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: registration });
   if (!token) throw new Error('no-token');
 
-  await updateDoc(doc(db, 'users', uid), {
+  await updateDoc(userRef(db, uid), {
     fcm_token: token,
     fcm_token_updated_at: serverTimestamp(),
   });
