@@ -1,9 +1,11 @@
 import { useState, type FormEvent } from 'react';
-import { deleteDoc, doc, setDoc, updateDoc, writeBatch } from 'firebase/firestore';
+import { deleteDoc, setDoc, updateDoc, writeBatch } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useToast } from '../../contexts/ToastContext';
-import { MEAL_TYPES_COLLECTION, type MealType } from '../../lib/mealTypes';
+import { useMess } from '../../contexts/MessContext';
+import { messDoc } from '../../lib/paths';
+import { type MealType } from '../../lib/mealTypes';
 import { slugify } from '../../lib/labels';
 import { parseAmount } from '../../lib/numbers';
 
@@ -17,6 +19,7 @@ type Draft = { label_bn: string; label_en: string; weight: string };
 export default function MealTypeManager({ mealTypes }: Props) {
   const { t } = useLanguage();
   const { toast } = useToast();
+  const messId = useMess().messId ?? '';
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const [adding, setAdding] = useState(false);
   const [newItem, setNewItem] = useState<Draft>({ label_bn: '', label_en: '', weight: '1' });
@@ -38,7 +41,7 @@ export default function MealTypeManager({ mealTypes }: Props) {
     }
     setBusy(type.id);
     try {
-      await updateDoc(doc(db, MEAL_TYPES_COLLECTION, type.id), { label_bn: draft.label_bn.trim(), label_en: draft.label_en.trim(), weight });
+      await updateDoc(messDoc(db, messId, 'meal_types', type.id), { label_bn: draft.label_bn.trim(), label_en: draft.label_en.trim(), weight });
       setDrafts((current) => {
         const next = { ...current };
         delete next[type.id];
@@ -60,8 +63,8 @@ export default function MealTypeManager({ mealTypes }: Props) {
     const batch = writeBatch(db);
     const a = current.sort_order;
     const b = other.sort_order === a ? a + direction : other.sort_order;
-    batch.update(doc(db, MEAL_TYPES_COLLECTION, current.id), { sort_order: b });
-    batch.update(doc(db, MEAL_TYPES_COLLECTION, other.id), { sort_order: a });
+    batch.update(messDoc(db, messId, 'meal_types', current.id), { sort_order: b });
+    batch.update(messDoc(db, messId, 'meal_types', other.id), { sort_order: a });
     await batch.commit();
   };
 
@@ -78,7 +81,7 @@ export default function MealTypeManager({ mealTypes }: Props) {
     if (mealTypes.some((m) => m.id === id)) id = `${id}_${Date.now().toString(36)}`;
     setBusy('new');
     try {
-      await setDoc(doc(db, MEAL_TYPES_COLLECTION, id), { label_bn, label_en, weight, sort_order: (mealTypes.at(-1)?.sort_order ?? 0) + 10, active: true });
+      await setDoc(messDoc(db, messId, 'meal_types', id), { label_bn, label_en, weight, sort_order: (mealTypes.at(-1)?.sort_order ?? 0) + 10, active: true });
       setNewItem({ label_bn: '', label_en: '', weight: '1' });
       setAdding(false);
       toast(t('mealTypeAdded'));
@@ -92,7 +95,7 @@ export default function MealTypeManager({ mealTypes }: Props) {
 
   const remove = async (type: MealType) => {
     if (!confirm(`${t('deleteMealTypeConfirm')} (${type.label_en})`)) return;
-    await deleteDoc(doc(db, MEAL_TYPES_COLLECTION, type.id));
+    await deleteDoc(messDoc(db, messId, 'meal_types', type.id));
     toast(t('deleted'));
   };
 
@@ -143,7 +146,7 @@ export default function MealTypeManager({ mealTypes }: Props) {
                   <td className="p-2"><input className={inputClass} value={draft.label_bn} onChange={(e) => setDraft(type, { label_bn: e.target.value })} /></td>
                   <td className="p-2"><input className={inputClass} value={draft.label_en} onChange={(e) => setDraft(type, { label_en: e.target.value })} /></td>
                   <td className="p-2"><input className={`${inputClass} w-20`} inputMode="decimal" value={draft.weight} onChange={(e) => setDraft(type, { weight: e.target.value })} /></td>
-                  <td className="p-2"><input type="checkbox" checked={type.active} onChange={() => updateDoc(doc(db, MEAL_TYPES_COLLECTION, type.id), { active: !type.active })} /></td>
+                  <td className="p-2"><input type="checkbox" checked={type.active} onChange={() => updateDoc(messDoc(db, messId, 'meal_types', type.id), { active: !type.active })} /></td>
                   <td className="p-2 whitespace-nowrap">
                     {isDirty(type) && (
                       <button onClick={() => save(type)} disabled={busy === type.id} className="text-xs font-medium bg-green-600 text-white px-3 py-1.5 rounded-lg hover:bg-green-700 disabled:opacity-50 mr-2">

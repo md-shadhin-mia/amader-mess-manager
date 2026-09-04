@@ -1,5 +1,7 @@
-import { collection, query, where } from 'firebase/firestore';
+import { query, where } from 'firebase/firestore';
 import { db } from '../firebase';
+import { useMess } from '../contexts/MessContext';
+import { messCol } from '../lib/paths';
 import type { SettlementCategory, SettlementMealType } from '../lib/settlement';
 import { useCollection } from './useCollection';
 
@@ -31,9 +33,10 @@ export interface MonthDoc {
 }
 
 export function useActiveMonth(): { activeMonth: MonthDoc | null; loading: boolean } {
+  const { messId } = useMess();
   const { docs, loading } = useCollection<Omit<MonthDoc, 'id'>>(
-    () => query(collection(db, 'months'), where('status', '==', 'active')),
-    'months:active',
+    () => (messId ? query(messCol(db, messId, 'months'), where('status', '==', 'active')) : null),
+    `months:active:${messId}`,
   );
   // Newest first if more than one is accidentally active.
   const sorted = docs.map((d) => ({ id: d.id, ...d.data })).sort((a, b) => b.id.localeCompare(a.id));
@@ -41,7 +44,8 @@ export function useActiveMonth(): { activeMonth: MonthDoc | null; loading: boole
 }
 
 export function useMonths(): { months: MonthDoc[]; loading: boolean } {
-  const { docs, loading } = useCollection<Omit<MonthDoc, 'id'>>(() => query(collection(db, 'months')), 'months:all');
+  const { messId } = useMess();
+  const { docs, loading } = useCollection<Omit<MonthDoc, 'id'>>(() => (messId ? query(messCol(db, messId, 'months')) : null), `months:all:${messId}`);
   const months = docs.map((d) => ({ id: d.id, ...d.data })).sort((a, b) => b.id.localeCompare(a.id));
   return { months, loading };
 }

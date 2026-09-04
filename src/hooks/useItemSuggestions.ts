@@ -1,5 +1,7 @@
-import { collection, limit, orderBy, query } from 'firebase/firestore';
+import { limit, orderBy, query } from 'firebase/firestore';
 import { db } from '../firebase';
+import { useMess } from '../contexts/MessContext';
+import { messCol } from '../lib/paths';
 import { useCollection } from './useCollection';
 import type { ExpenseDoc } from './useMonthEntries';
 
@@ -8,9 +10,10 @@ import type { ExpenseDoc } from './useMonthEntries';
  * for the autocomplete on the member form.
  */
 export function useItemSuggestions(max = 40): string[] {
+  const { messId } = useMess();
   const { docs } = useCollection<ExpenseDoc>(
-    () => query(collection(db, 'bazar_expenses'), orderBy('timestamp', 'desc'), limit(150)),
-    'bazar_expenses:recent',
+    () => (messId ? query(messCol(db, messId, 'bazar_expenses'), orderBy('timestamp', 'desc'), limit(150)) : null),
+    `bazar_expenses:recent:${messId}`,
   );
   const counts = new Map<string, { display: string; n: number }>();
   for (const d of docs) {

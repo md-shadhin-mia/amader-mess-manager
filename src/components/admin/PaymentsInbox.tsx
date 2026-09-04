@@ -1,17 +1,19 @@
 import { useState, type FormEvent } from 'react';
-import { addDoc, collection, doc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { addDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
+import { useMess } from '../../contexts/MessContext';
+import { messCol, messDoc } from '../../lib/paths';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useToast } from '../../contexts/ToastContext';
 import { usePendingPayments, type PaymentDoc, type PaymentPurpose } from '../../hooks/useMonthEntries';
-import type { UserDoc } from '../../hooks/useUsers';
+import type { MemberDoc } from '../../hooks/useMembers';
 import type { Doc } from '../../hooks/useCollection';
 import { todayId, formatDateId } from '../../lib/dates';
 import { formatTk, parseAmount } from '../../lib/numbers';
 import AmountInput from '../ui/AmountInput';
 
 interface Props {
-  users: UserDoc[];
+  users: MemberDoc[];
   managerUid: string;
   monthPayments: Doc<PaymentDoc>[];
 }
@@ -29,6 +31,7 @@ export const PURPOSE_KEYS: Record<PaymentPurpose, 'purposeFund' | 'purposePrepai
 export default function PaymentsInbox({ users, managerUid, monthPayments }: Props) {
   const { t, lang } = useLanguage();
   const { toast } = useToast();
+  const messId = useMess().messId ?? '';
   const { pending } = usePendingPayments();
   const [form, setForm] = useState({ user_id: '', purpose: 'fund_deposit' as PaymentPurpose, amount: '', date: todayId(), note: '' });
   const [busy, setBusy] = useState<string | null>(null);
@@ -38,7 +41,7 @@ export default function PaymentsInbox({ users, managerUid, monthPayments }: Prop
   const setStatus = async (payment: Doc<PaymentDoc>, status: 'confirmed' | 'rejected') => {
     setBusy(payment.id);
     try {
-      await updateDoc(doc(db, 'payments', payment.id), { status, confirmed_by: managerUid, confirmed_at: serverTimestamp() });
+      await updateDoc(messDoc(db, messId, 'payments', payment.id), { status, confirmed_by: managerUid, confirmed_at: serverTimestamp() });
       toast(status === 'confirmed' ? t('paymentConfirmed') : t('paymentRejected'));
     } catch (err) {
       console.error(err);
@@ -57,7 +60,7 @@ export default function PaymentsInbox({ users, managerUid, monthPayments }: Prop
     }
     setBusy('new');
     try {
-      await addDoc(collection(db, 'payments'), {
+      await addDoc(messCol(db, messId, 'payments'), {
         date: form.date,
         user_id: form.user_id,
         amount,

@@ -15,13 +15,13 @@ import {
  * push through the Cloudflare Worker to confirm the whole chain works.
  */
 export default function NotificationSettings() {
-  const { userProfile } = useAuth();
+  const { account, currentUser } = useAuth();
   const { t } = useLanguage();
   const [status, setStatus] = useState<PushStatus | 'loading'>('loading');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  const hasToken = Boolean(userProfile?.fcm_token);
+  const hasToken = Boolean(account?.fcm_token);
 
   useEffect(() => {
     let cancelled = false;
@@ -39,13 +39,13 @@ export default function NotificationSettings() {
     return () => unsubscribe?.();
   }, [t]);
 
-  if (!userProfile) return null;
+  if (!currentUser) return null;
 
   const enable = async () => {
     setBusy(true);
     setMessage(null);
     try {
-      await enablePushNotifications(userProfile.uid);
+      await enablePushNotifications(currentUser.uid);
       setStatus('enabled');
       setMessage(t('pushEnabled'));
     } catch (err) {

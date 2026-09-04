@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { auth } from '../firebase';
-import { useAuth } from '../AuthContext';
+import { useMess } from '../contexts/MessContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useActiveMonth } from '../hooks/useMonths';
 import { useMonthSettlement } from '../hooks/useMonthSettlement';
@@ -12,7 +12,7 @@ import NotificationSettings from '../components/NotificationSettings';
 import { useState } from 'react';
 
 export default function MemberDashboard() {
-  const { userProfile } = useAuth();
+  const { member: userProfile, mess } = useMess();
   const { t, lang, setLang } = useLanguage();
   const navigate = useNavigate();
   const [showProfile, setShowProfile] = useState(false);
@@ -31,7 +31,7 @@ export default function MemberDashboard() {
       <header className="bg-white border-b border-gray-200 px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 sticky top-0 z-10">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">{t('memberPanel')}</h1>
-          <p className="text-sm text-gray-500">{t('welcome')}, {userProfile?.name}</p>
+          <p className="text-sm text-gray-500">{t('welcome')}, {userProfile?.name} · <Link to="/messes" className="text-blue-600 hover:underline">{mess?.name}</Link></p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <button onClick={() => navigate('/member/entry')} className="text-sm font-medium bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">{t('openEntry')}</button>

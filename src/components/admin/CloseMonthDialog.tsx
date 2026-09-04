@@ -5,7 +5,8 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useToast } from '../../contexts/ToastContext';
 import type { MonthDoc } from '../../hooks/useMonths';
 import type { MonthEntries } from '../../hooks/useMonthEntries';
-import type { UserDoc } from '../../hooks/useUsers';
+import type { MemberDoc } from '../../hooks/useMembers';
+import { useMess } from '../../contexts/MessContext';
 import type { CostCategory } from '../../lib/costCategories';
 import type { MealType } from '../../lib/mealTypes';
 import { BLOCKING_WARNINGS, buildSettlementInput, closeMonth, MonthCloseError } from '../../lib/closeMonth';
@@ -15,7 +16,7 @@ import { describeWarning } from '../../lib/warnings';
 
 interface Props {
   month: MonthDoc;
-  users: UserDoc[];
+  users: MemberDoc[];
   categories: CostCategory[];
   mealTypes: MealType[];
   entries: MonthEntries;
@@ -27,6 +28,7 @@ interface Props {
 export default function CloseMonthDialog({ month, users, categories, mealTypes, entries, closedBy, onClose }: Props) {
   const { t, lang } = useLanguage();
   const { toast } = useToast();
+  const { messId } = useMess();
   const navigate = useNavigate();
   const [applyAdvance, setApplyAdvance] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -50,7 +52,8 @@ export default function CloseMonthDialog({ month, users, categories, mealTypes, 
   const confirmClose = async () => {
     setBusy(true);
     try {
-      await closeMonth(db, { monthId: month.id, users, categories, mealTypes, applyAdvance, closedBy });
+      if (!messId) return;
+      await closeMonth(db, { messId, monthId: month.id, users, categories, mealTypes, applyAdvance, closedBy });
       toast(t('monthClosed'));
       onClose();
       navigate(`/admin/months/${month.id}`);

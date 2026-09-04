@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { collection, doc, getDoc, query } from 'firebase/firestore';
+import { getDoc, query } from 'firebase/firestore';
 import { db } from '../firebase';
+import { useMess } from '../contexts/MessContext';
+import { settlementRef, settlementsCol } from '../lib/paths';
 import { useCollection } from './useCollection';
 import { useMonths, type MonthDoc } from './useMonths';
 import { useMonthEntries } from './useMonthEntries';
-import { useUsers } from './useUsers';
+import { useMembers } from './useMembers';
 import { useCostCategories } from './useCostCategories';
 import { useMealTypes } from './useMealTypes';
 import { buildSettlementInput } from '../lib/closeMonth';
@@ -37,34 +39,35 @@ function snapshotToCategories(snapshot: SettlementCategory[] | undefined, fallba
  */
 export function useMonthSettlement(monthId: string | null, options: { onlyUid?: string; applyAdvance?: boolean } = {}): MonthSettlement {
   const { onlyUid, applyAdvance = true } = options;
+  const { messId } = useMess();
   const { months, loading: monthsLoading } = useMonths();
   const month = monthId ? months.find((m) => m.id === monthId) ?? null : null;
   const isActive = month?.status === 'active';
   const isClosed = month?.status === 'closed';
   const hasRows = isClosed && Boolean(month?.settlement_version);
 
-  const { users, loading: usersLoading } = useUsers();
+  const { allMembers: users, loading: usersLoading } = useMembers();
   const { categories: liveCategories } = useCostCategories();
   const { mealTypes: liveMealTypes } = useMealTypes();
   const entries = useMonthEntries(isActive ? monthId : null);
 
   // Closed month, manager view: list all rows.
   const rowsQuery = useCollection<SettlementRow>(
-    () => (hasRows && !onlyUid && monthId ? query(collection(db, 'months', monthId, 'settlements')) : null),
-    `settlements:${hasRows && !onlyUid ? monthId : 'none'}`,
+    () => (hasRows && !onlyUid && monthId && messId ? query(settlementsCol(db, messId, monthId)) : null),
+    `settlements:${messId}:${hasRows && !onlyUid ? monthId : 'none'}`,
   );
 
   // Closed month, member view: only the member's own row is readable.
   const [ownRow, setOwnRow] = useState<SettlementRow | null>(null);
   const [ownLoading, setOwnLoading] = useState(false);
   useEffect(() => {
-    if (!hasRows || !onlyUid || !monthId) {
+    if (!hasRows || !onlyUid || !monthId || !messId) {
       setOwnRow(null);
       return;
     }
     let cancelled = false;
     setOwnLoading(true);
-    getDoc(doc(db, 'months', monthId, 'settlements', onlyUid))
+    getDoc(settlementRef(db, messId, monthId, onlyUid))
       .then((snap) => {
         if (!cancelled) setOwnRow(snap.exists() ? (snap.data() as SettlementRow) : null);
       })
@@ -75,7 +78,7 @@ export function useMonthSettlement(monthId: string | null, options: { onlyUid?: 
     return () => {
       cancelled = true;
     };
-  }, [hasRows, onlyUid, monthId]);
+  }, [hasRows, onlyUid, monthId, messId]);
 
   const categories = useMemo(
     () => (isActive ? liveCategories : snapshotToCategories(month?.categories_snapshot, liveCategories)),

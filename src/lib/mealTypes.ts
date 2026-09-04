@@ -1,17 +1,18 @@
-import { collection, doc, getDocs, writeBatch, type Firestore } from 'firebase/firestore';
+import { getDocs, writeBatch, type Firestore } from 'firebase/firestore';
 import { DEFAULT_MEAL_TYPES, MEAL_TYPES_COLLECTION, type MealType } from './defaults';
+import { messCol, messDoc } from './paths';
 
 export { DEFAULT_MEAL_TYPES, MEAL_TYPES_COLLECTION } from './defaults';
 export type { MealType } from './defaults';
 
-/** Browser-side one-time seed, run by the first manager to open the dashboard. */
-export async function seedMealTypesIfEmpty(db: Firestore): Promise<boolean> {
-  const existing = await getDocs(collection(db, MEAL_TYPES_COLLECTION));
+/** Browser-side one-time seed for one mess. Writes only when the collection is empty. */
+export async function seedMealTypesIfEmpty(db: Firestore, messId: string): Promise<boolean> {
+  const existing = await getDocs(messCol(db, messId, 'meal_types'));
   if (!existing.empty) return false;
   const batch = writeBatch(db);
   for (const type of DEFAULT_MEAL_TYPES) {
     const { id, ...data } = type;
-    batch.set(doc(db, MEAL_TYPES_COLLECTION, id), data);
+    batch.set(messDoc(db, messId, 'meal_types', id), data);
   }
   await batch.commit();
   return true;

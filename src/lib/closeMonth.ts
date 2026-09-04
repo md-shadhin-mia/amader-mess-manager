@@ -1,16 +1,6 @@
-import {
-  collection,
-  deleteField,
-  doc,
-  getDoc,
-  getDocs,
-  query,
-  serverTimestamp,
-  where,
-  writeBatch,
-  type Firestore,
-} from 'firebase/firestore';
+import { deleteField, getDoc, getDocs, query, serverTimestamp, where, writeBatch, type Firestore } from 'firebase/firestore';
 import { monthRange } from './dates';
+import { memberRef, messCol, messDoc, settlementRef, settlementsCol, type TenantCollection } from './paths';
 import { ROOM_RENT_CATEGORY_ID, type CostCategory } from './costCategories';
 import type { MealType } from './mealTypes';
 import { computeSettlement, SETTLEMENT_VERSION, type SettlementInput, type SettlementResult } from './settlement';
@@ -22,6 +12,8 @@ export interface MemberLike {
   name: string;
   advance_balance?: number;
   room_rent?: number;
+  /** Members who left keep their history but get no share of equal-split costs by default. */
+  status?: 'active' | 'left';
 }
 
 export interface EntryBundle {
@@ -70,7 +62,10 @@ export function buildSettlementInput(args: {
     mealTypes: mealTypes.map((type) => ({ id: type.id, weight: type.weight })),
     fixedCosts: month.fixed_costs || {},
     memberCosts: effectiveMemberCosts(month, users, categories),
-    memberWeights: month.member_weights || {},
+    memberWeights: {
+      ...Object.fromEntries(users.filter((user) => user.status === 'left').map((user) => [user.uid, 0])),
+      ...(month.member_weights || {}),
+    },
     meals: entries.meals,
     expenses: entries.expenses,
     payments: entries.payments,
@@ -78,10 +73,10 @@ export function buildSettlementInput(args: {
   };
 }
 
-async function fetchMonthEntries(db: Firestore, monthId: string): Promise<EntryBundle> {
+async function fetchMonthEntries(db: Firestore, messId: string, monthId: string): Promise<EntryBundle> {
   const range = monthRange(monthId);
-  const load = async <T,>(name: string): Promise<T[]> => {
-    const snap = await getDocs(query(collection(db, name), where('date', '>=', range.start), where('date', '<=', range.end)));
+  const load = async <T,>(name: TenantCollection): Promise<T[]> => {
+    const snap = await getDocs(query(messCol(db, messId, name), where('date', '>=', range.start), where('date', '<=', range.end)));
     return snap.docs.map((d) => d.data() as T);
   };
   const [meals, expenses, payments] = await Promise.all([load<MealDoc>('daily_meals'), load<ExpenseDoc>('bazar_expenses'), load<PaymentDoc>('payments')]);
@@ -103,16 +98,16 @@ export const BLOCKING_WARNINGS = ['NO_MEALS'];
  */
 export async function closeMonth(
   db: Firestore,
-  args: { monthId: string; users: MemberLike[]; categories: CostCategory[]; mealTypes: MealType[]; applyAdvance: boolean; closedBy: string },
+  args: { messId: string; monthId: string; users: MemberLike[]; categories: CostCategory[]; mealTypes: MealType[]; applyAdvance: boolean; closedBy: string },
 ): Promise<SettlementResult> {
-  const monthRef = doc(db, 'months', args.monthId);
+  const monthRef = messDoc(db, args.messId, 'months', args.monthId);
   const monthSnap = await getDoc(monthRef);
   const month = { id: monthSnap.id, ...(monthSnap.data() as Omit<MonthDoc, 'id'>) };
   if (!monthSnap.exists() || month.status !== 'active') {
     throw new MonthCloseError('NOT_ACTIVE', 'This month is not active.');
   }
 
-  const entries = await fetchMonthEntries(db, args.monthId);
+  const entries = await fetchMonthEntries(db, args.messId, args.monthId);
   const input = buildSettlementInput({ month, users: args.users, categories: args.categories, mealTypes: args.mealTypes, entries, applyAdvance: args.applyAdvance });
   const result = computeSettlement(input);
 
@@ -145,9 +140,9 @@ export async function closeMonth(
 
   const knownUids = new Set(args.users.map((user) => user.uid));
   for (const row of result.rows) {
-    batch.set(doc(db, 'months', args.monthId, 'settlements', row.uid), row);
+    batch.set(settlementRef(db, args.messId, args.monthId, row.uid), row);
     if (args.applyAdvance && knownUids.has(row.uid) && row.advance_after !== row.advance_before) {
-      batch.update(doc(db, 'users', row.uid), { advance_balance: row.advance_after });
+      batch.update(memberRef(db, args.messId, row.uid), { advance_balance: row.advance_after });
     }
   }
 
@@ -156,19 +151,19 @@ export async function closeMonth(
 }
 
 /** Reverts a close: restores advances, deletes settlement rows and reactivates the month. */
-export async function reopenMonth(db: Firestore, monthId: string): Promise<void> {
-  const monthRef = doc(db, 'months', monthId);
+export async function reopenMonth(db: Firestore, messId: string, monthId: string): Promise<void> {
+  const monthRef = messDoc(db, messId, 'months', monthId);
   const monthSnap = await getDoc(monthRef);
   const month = monthSnap.data() as (Omit<MonthDoc, 'id'> & { advance_applied?: boolean }) | undefined;
   if (!month || month.status !== 'closed') throw new MonthCloseError('NOT_ACTIVE', 'This month is not closed.');
 
-  const settlements = await getDocs(collection(db, 'months', monthId, 'settlements'));
+  const settlements = await getDocs(settlementsCol(db, messId, monthId));
   const batch = writeBatch(db);
   for (const row of settlements.docs) {
     const data = row.data() as { advance_before?: number; advance_after?: number };
     if (month.advance_applied && typeof data.advance_before === 'number' && data.advance_before !== data.advance_after) {
-      const userSnap = await getDoc(doc(db, 'users', row.id));
-      if (userSnap.exists()) batch.update(doc(db, 'users', row.id), { advance_balance: data.advance_before });
+      const memberSnap = await getDoc(memberRef(db, messId, row.id));
+      if (memberSnap.exists()) batch.update(memberRef(db, messId, row.id), { advance_balance: data.advance_before });
     }
     batch.delete(row.ref);
   }

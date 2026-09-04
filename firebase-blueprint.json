@@ -2,7 +2,7 @@
   "entities": {
     "User": {
       "title": "User",
-      "description": "System user (Manager or Member)",
+      "description": "Global account. Role, rent and advance moved to messes/{messId}/members/{uid}. Super admin is an auth custom claim, not a field.",
       "type": "object",
       "properties": {
         "uid": {
@@ -14,39 +14,28 @@
         "email": {
           "type": "string"
         },
-        "role": {
-          "type": "string",
-          "enum": [
-            "manager",
-            "member"
-          ]
+        "phone": {
+          "type": "string"
         },
         "fcm_token": {
-          "type": "string",
-          "description": "Web push token of the last browser that enabled notifications"
+          "type": "string"
         },
         "fcm_token_updated_at": {
           "type": "string",
           "format": "date-time"
         },
-        "advance_balance": {
-          "type": "number"
+        "current_mess_id": {
+          "type": "string"
         },
-        "sonsthapon": {
-          "type": "number"
-        },
-        "room_rent": {
-          "type": "number",
-          "description": "Monthly room rent for this member, set by the manager"
+        "messes": {
+          "type": "object",
+          "description": "{ messId: { name } } client-side index only"
         }
       },
       "required": [
         "uid",
         "name",
-        "email",
-        "role",
-        "advance_balance",
-        "sonsthapon"
+        "email"
       ]
     },
     "Month": {
@@ -156,27 +145,6 @@
         "date",
         "user_id",
         "meal_count"
-      ]
-    },
-    "BazarFund": {
-      "title": "Bazar Fund",
-      "description": "Contributions to the bazar fund",
-      "type": "object",
-      "properties": {
-        "date": {
-          "type": "string"
-        },
-        "user_id": {
-          "type": "string"
-        },
-        "amount_contributed": {
-          "type": "number"
-        }
-      },
-      "required": [
-        "date",
-        "user_id",
-        "amount_contributed"
       ]
     },
     "BazarExpense": {
@@ -463,6 +431,125 @@
         "total_charges",
         "net_payable"
       ]
+    },
+    "Mess": {
+      "title": "Mess",
+      "description": "A tenant. Everything a mess owns lives under messes/{messId}.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "owner_uid": {
+          "type": "string"
+        },
+        "plan": {
+          "type": "string",
+          "enum": [
+            "free",
+            "pro"
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "suspended"
+          ]
+        },
+        "member_limit": {
+          "type": "number"
+        },
+        "member_count": {
+          "type": "number"
+        },
+        "timezone": {
+          "type": "string"
+        },
+        "join_code": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "owner_uid",
+        "plan",
+        "status",
+        "member_limit",
+        "member_count",
+        "timezone",
+        "join_code"
+      ]
+    },
+    "Member": {
+      "title": "Member",
+      "description": "A person's profile inside one mess; the only authorization source in the rules.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "phone": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "manager",
+            "member"
+          ]
+        },
+        "advance_balance": {
+          "type": "number"
+        },
+        "room_rent": {
+          "type": "number"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "left"
+          ]
+        },
+        "joined_with_code": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "name",
+        "role",
+        "advance_balance",
+        "room_rent",
+        "status"
+      ]
+    },
+    "JoinCode": {
+      "title": "Join Code",
+      "description": "Maps a shareable code to a mess. Get-only for signed-in users.",
+      "type": "object",
+      "properties": {
+        "mess_id": {
+          "type": "string"
+        },
+        "mess_name": {
+          "type": "string"
+        },
+        "created_by": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "mess_id",
+        "created_by"
+      ]
     }
   },
   "firestore": {
@@ -470,67 +557,79 @@
       "schema": {
         "$ref": "#/entities/User"
       },
-      "description": "User profiles"
+      "description": "Global accounts"
     },
-    "/months/{monthId}": {
+    "/join_codes/{code}": {
       "schema": {
-        "$ref": "#/entities/Month"
+        "$ref": "#/entities/JoinCode"
       },
-      "description": "Monthly accounting records"
+      "description": "Join codes"
     },
-    "/daily_meals/{mealId}": {
+    "/messes/{messId}": {
       "schema": {
-        "$ref": "#/entities/DailyMeal"
+        "$ref": "#/entities/Mess"
       },
-      "description": "Daily meals"
+      "description": "Tenants"
     },
-    "/bazar_fund/{fundId}": {
+    "/messes/{messId}/members/{userId}": {
       "schema": {
-        "$ref": "#/entities/BazarFund"
+        "$ref": "#/entities/Member"
       },
-      "description": "Legacy fund contributions (superseded by /payments)"
+      "description": "Per-mess member profiles"
     },
-    "/bazar_expenses/{expenseId}": {
-      "schema": {
-        "$ref": "#/entities/BazarExpense"
-      },
-      "description": "Daily bazar expenses"
-    },
-    "/notification_logs/{logId}": {
-      "schema": {
-        "$ref": "#/entities/NotificationLog"
-      },
-      "description": "Push notification run history"
-    },
-    "/bazar_schedule/{scheduleId}": {
-      "schema": {
-        "$ref": "#/entities/BazarSchedule"
-      },
-      "description": "Schedule for daily bazar"
-    },
-    "/cost_categories/{categoryId}": {
+    "/messes/{messId}/cost_categories/{categoryId}": {
       "schema": {
         "$ref": "#/entities/CostCategory"
       },
       "description": "Dynamic cost categories"
     },
-    "/meal_types/{typeId}": {
+    "/messes/{messId}/meal_types/{typeId}": {
       "schema": {
         "$ref": "#/entities/MealType"
       },
       "description": "Dynamic meal types"
     },
-    "/payments/{paymentId}": {
+    "/messes/{messId}/months/{monthId}": {
+      "schema": {
+        "$ref": "#/entities/Month"
+      },
+      "description": "Monthly accounting records"
+    },
+    "/messes/{messId}/months/{monthId}/settlements/{userId}": {
+      "schema": {
+        "$ref": "#/entities/Settlement"
+      },
+      "description": "Per-member settlement rows"
+    },
+    "/messes/{messId}/daily_meals/{mealId}": {
+      "schema": {
+        "$ref": "#/entities/DailyMeal"
+      },
+      "description": "Daily meals"
+    },
+    "/messes/{messId}/bazar_expenses/{expenseId}": {
+      "schema": {
+        "$ref": "#/entities/BazarExpense"
+      },
+      "description": "Daily bazar expenses"
+    },
+    "/messes/{messId}/payments/{paymentId}": {
       "schema": {
         "$ref": "#/entities/Payment"
       },
       "description": "Fund deposits and other payments to the manager"
     },
-    "/months/{monthId}/settlements/{userId}": {
+    "/messes/{messId}/bazar_schedule/{scheduleId}": {
       "schema": {
-        "$ref": "#/entities/Settlement"
+        "$ref": "#/entities/BazarSchedule"
       },
-      "description": "Per-member settlement rows"
+      "description": "Schedule for daily bazar"
+    },
+    "/notification_logs/{logId}": {
+      "schema": {
+        "$ref": "#/entities/NotificationLog"
+      },
+      "description": "One push run across all messes"
     }
   }
 }

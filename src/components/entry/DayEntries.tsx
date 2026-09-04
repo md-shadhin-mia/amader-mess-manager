@@ -1,5 +1,7 @@
-import { deleteDoc, doc } from 'firebase/firestore';
+import { deleteDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
+import { useMess } from '../../contexts/MessContext';
+import { messDoc } from '../../lib/paths';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useToast } from '../../contexts/ToastContext';
 import type { Doc } from '../../hooks/useCollection';
@@ -18,11 +20,12 @@ interface Props {
 export default function DayEntries({ expenses, payments, onEditExpense, disabled }: Props) {
   const { t, lang } = useLanguage();
   const { toast } = useToast();
+  const messId = useMess().messId ?? '';
 
   const remove = async (collectionName: 'bazar_expenses' | 'payments', id: string) => {
     if (!confirm(t('deleteConfirm'))) return;
     try {
-      await deleteDoc(doc(db, collectionName, id));
+      await deleteDoc(messDoc(db, messId, collectionName, id));
       toast(t('entryDeleted'));
     } catch (err) {
       console.error('Delete failed', err);
