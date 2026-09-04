@@ -42,13 +42,20 @@ export class FirestoreClient {
     return response;
   }
 
-  /** Runs a structured query against one top-level collection. */
+  /**
+   * Runs a structured query. `collection` is a top-level collection id, or with
+   * `allDescendants` a collection-group id matched at any depth (e.g. every
+   * mess's `daily_meals`). The returned `name` carries the full path.
+   */
   async query<T = Record<string, unknown>>(
     collection: string,
-    where?: { field: string; op: 'EQUAL' | 'GREATER_THAN' | 'LESS_THAN'; value: string | number | boolean },
-    limit = 500,
+    where?: { field: string; op: 'EQUAL' | 'GREATER_THAN' | 'LESS_THAN' | 'IN'; value: string | number | boolean | (string | number)[] },
+    options: { limit?: number; allDescendants?: boolean } = {},
   ): Promise<FirestoreDocument<T>[]> {
-    const structuredQuery: Record<string, unknown> = { from: [{ collectionId: collection }], limit };
+    const structuredQuery: Record<string, unknown> = {
+      from: [{ collectionId: collection, allDescendants: options.allDescendants ?? false }],
+      limit: options.limit ?? 1000,
+    };
     if (where) {
       structuredQuery.where = {
         fieldFilter: { field: { fieldPath: where.field }, op: where.op, value: toFirestoreValue(where.value) },

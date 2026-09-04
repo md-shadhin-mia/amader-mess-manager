@@ -12,9 +12,17 @@ triggers, talks to Firestore over REST, and needs no server of its own.
 | `bazar_reminder` | `0 2 * * *`            | 08:00      | The user(s) assigned in `bazar_schedule` for today         |
 | `test`           | on demand              |            | The signed-in user who pressed "Send test notification"    |
 
-Every run writes a summary to the `notification_logs` collection in Firestore
-(`sent`, `failed`, `skipped`, first few errors). Tokens that FCM reports as
-unregistered are cleared from the user profile automatically.
+The worker is multi-tenant: one run covers every active mess. It loads the
+active messes (each with its own timezone), all active members via a
+collection-group query, today's meals and bazar schedule via collection-group
+queries, and push tokens from the global `users` collection. Suspended messes
+are skipped. Every run writes one document to `notification_logs` with totals
+and a `per_mess` breakdown. Tokens that FCM reports as unregistered are
+cleared from the user's account automatically.
+
+Collection-group queries need the single-field overrides in
+`firestore.indexes.json` at the repo root; the merge workflow deploys them
+with `firebase deploy --only firestore`.
 
 ## One-time setup
 
