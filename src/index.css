@@ -1,1 +1,9 @@
 @import "tailwindcss";
+
+@media print {
+  body { background: white; }
+  .print\:hidden { display: none !important; }
+  main { padding: 0 !important; }
+  table { font-size: 10px; }
+  th, td { padding: 3px 4px !important; }
+}

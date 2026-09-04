@@ -1,0 +1,24 @@
+name = "mess-push"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+
+# Public configuration. Secrets (FIREBASE_SERVICE_ACCOUNT, ADMIN_KEY) are set with
+# `wrangler secret put <NAME>` and, for local dev, in a .dev.vars file (git-ignored).
+[vars]
+FIREBASE_PROJECT_ID = "amader-mess-manager"
+# Where notification clicks open. Firebase Hosting default site for the project.
+APP_URL = "https://amader-mess-manager.web.app"
+# Origin allowed to call POST /test from the browser. Use "*" while developing locally.
+ALLOWED_ORIGIN = "https://amader-mess-manager.web.app"
+# Timezone the mess lives in; entries are dated by this calendar.
+TIMEZONE = "Asia/Dhaka"
+# Which cron expression maps to which job. Must match the [triggers] list below.
+# Cloudflare evaluates crons in UTC. Asia/Dhaka is UTC+6.
+MEAL_REMINDER_CRON = "0 14 * * *"   # 20:00 Dhaka: remind members who have not logged today's meal
+BAZAR_REMINDER_CRON = "0 2 * * *"   # 08:00 Dhaka: remind whoever is assigned to today's bazar
+
+[triggers]
+crons = ["0 14 * * *", "0 2 * * *"]
+
+[observability]
+enabled = true

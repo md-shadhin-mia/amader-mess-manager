@@ -1,0 +1,5 @@
+# Copy to .dev.vars for `wrangler dev`. Never commit .dev.vars.
+# Service account JSON (single line). Firebase Console → Project settings → Service accounts → Generate new private key.
+FIREBASE_SERVICE_ACCOUNT={"type":"service_account","project_id":"amader-mess-manager","client_email":"...","private_key":"-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"}
+# Any long random string. Required for POST /run/<job> (manual job runs).
+ADMIN_KEY=change-me

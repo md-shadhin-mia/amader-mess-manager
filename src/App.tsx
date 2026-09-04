@@ -2,10 +2,14 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import type { ReactNode } from 'react';
 import { AuthProvider, useAuth } from './AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
+import { ToastProvider } from './contexts/ToastContext';
 import Login from './pages/Login';
 import AdminDashboard from './pages/AdminDashboard';
 import MemberDashboard from './pages/MemberDashboard';
 import MealEntry from './pages/MealEntry';
+import MonthsList from './pages/MonthsList';
+import MonthReport from './pages/MonthReport';
+import MemberMonth from './pages/MemberMonth';
 
 function ProfileLoadError({ message }: { message: string }) {
   return <div className="h-screen w-full flex items-center justify-center p-4 text-center text-red-600">{message}</div>;
@@ -50,13 +54,34 @@ function RoleBasedRedirect() {
 export default function App() {
   return (
     <LanguageProvider>
+      <ToastProvider>
       <AuthProvider>
         <Router>
           <Routes>
             <Route path="/login" element={<Login />} />
-            <Route path="/admin/*" element={
+            <Route path="/admin" element={
               <PrivateRoute allowedRole="manager">
                 <AdminDashboard />
+              </PrivateRoute>
+            } />
+            <Route path="/admin/months" element={
+              <PrivateRoute allowedRole="manager">
+                <MonthsList />
+              </PrivateRoute>
+            } />
+            <Route path="/admin/months/:monthId" element={
+              <PrivateRoute allowedRole="manager">
+                <MonthReport />
+              </PrivateRoute>
+            } />
+            <Route path="/member/months" element={
+              <PrivateRoute allowedRole="member">
+                <MemberMonth />
+              </PrivateRoute>
+            } />
+            <Route path="/member/months/:monthId" element={
+              <PrivateRoute allowedRole="member">
+                <MemberMonth />
               </PrivateRoute>
             } />
             <Route path="/member" element={
@@ -73,6 +98,7 @@ export default function App() {
           </Routes>
         </Router>
       </AuthProvider>
+      </ToastProvider>
     </LanguageProvider>
   );
 }

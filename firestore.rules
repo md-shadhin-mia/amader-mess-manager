@@ -23,6 +23,23 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/settings/app).data.firstAdminUid == userId;
     }
 
+    // Entry docs (meals, bazar, payments) carry a 'YYYY-MM-DD' date. Members may
+    // only touch entries whose month has not been closed by the manager.
+    function monthIsOpen(dateId) {
+      return dateId is string
+        && dateId.size() >= 7
+        && (!exists(/databases/$(database)/documents/months/$(dateId[0:7]))
+          || get(/databases/$(database)/documents/months/$(dateId[0:7])).data.status == 'active');
+    }
+
+    function ownsNew() {
+      return isSignedIn() && request.resource.data.user_id == request.auth.uid;
+    }
+
+    function ownsExisting() {
+      return isSignedIn() && resource.data.user_id == request.auth.uid;
+    }
+
     match /settings/app {
       allow get: if isSignedIn();
       allow create: if isSignedIn()
@@ -37,13 +54,14 @@ service cloud.firestore {
         && request.auth.uid == userId
         && (request.resource.data.role == 'member'
           || (request.resource.data.role == 'manager' && isFirstAdmin()));
-      // Members may edit their name and optional phone number, but never their role.
+      // Members may edit their name, phone number and push token, but never their role.
       // An admin can manage other roles but cannot demote the bootstrap admin.
       allow update: if (isManager()
           && (!isPrimaryAdmin(userId) || request.resource.data.role == 'manager'))
         || (isSignedIn()
           && request.auth.uid == userId
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'phone']))
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['name', 'phone', 'fcm_token', 'fcm_token_updated_at']))
         // Allows the first already-existing user to become the bootstrap admin in one batch.
         || (isSignedIn()
           && request.auth.uid == userId
@@ -53,32 +71,74 @@ service cloud.firestore {
       allow delete: if isManager() && !isPrimaryAdmin(userId);
     }
 
-    match /months/{monthId} {
+    // Manager-defined cost categories (shared utilities, rent, ...) and meal types.
+    match /cost_categories/{categoryId} {
       allow read: if isSignedIn();
       allow write: if isManager();
     }
 
-    match /daily_meals/{mealId} {
+    match /meal_types/{typeId} {
       allow read: if isSignedIn();
-      allow create, update: if isSignedIn() && request.resource.data.user_id == request.auth.uid;
-      allow delete: if isSignedIn() && resource.data.user_id == request.auth.uid;
+      allow write: if isManager();
     }
 
-    match /bazar_fund/{fundId} {
+    match /months/{monthId} {
       allow read: if isSignedIn();
-      allow create, update: if isSignedIn() && request.resource.data.user_id == request.auth.uid;
-      allow delete: if isSignedIn() && resource.data.user_id == request.auth.uid;
+      allow write: if isManager();
+
+      // Per-member settlement rows written at month close. A member sees only their own.
+      match /settlements/{userId} {
+        allow get: if isSignedIn() && (request.auth.uid == userId || isManager());
+        allow list, write: if isManager();
+      }
+    }
+
+    // Daily meals and bazar expenses: the manager may correct anything; a member
+    // may manage their own entries while the month is still open.
+    match /daily_meals/{mealId} {
+      allow read: if isSignedIn();
+      allow create, update: if isManager() || (ownsNew() && monthIsOpen(request.resource.data.date));
+      allow delete: if isManager() || (ownsExisting() && monthIsOpen(resource.data.date));
     }
 
     match /bazar_expenses/{expenseId} {
       allow read: if isSignedIn();
-      allow create, update: if isSignedIn() && request.resource.data.user_id == request.auth.uid;
-      allow delete: if isSignedIn() && resource.data.user_id == request.auth.uid;
+      allow create, update: if isManager() || (ownsNew() && monthIsOpen(request.resource.data.date));
+      allow delete: if isManager() || (ownsExisting() && monthIsOpen(resource.data.date));
+    }
+
+    // Money handed to the manager (fund deposits, prepaid rent, settlement).
+    // A member records a pending payment; only the manager can confirm or reject it.
+    match /payments/{paymentId} {
+      allow read: if isSignedIn();
+      allow create: if isManager()
+        || (ownsNew()
+          && request.resource.data.status == 'pending'
+          && monthIsOpen(request.resource.data.date));
+      allow update: if isManager()
+        || (ownsExisting()
+          && resource.data.status == 'pending'
+          && request.resource.data.status == 'pending'
+          && request.resource.data.user_id == resource.data.user_id
+          && monthIsOpen(request.resource.data.date));
+      allow delete: if isManager() || (ownsExisting() && resource.data.status == 'pending');
+    }
+
+    // Legacy collection kept readable for old data; new deposits go to /payments.
+    match /bazar_fund/{fundId} {
+      allow read: if isSignedIn();
+      allow write: if isManager();
     }
 
     match /bazar_schedule/{scheduleId} {
       allow read: if isSignedIn();
       allow write: if isManager();
+    }
+
+    // Written only by the push-notification Cloudflare Worker (service account, bypasses rules).
+    match /notification_logs/{logId} {
+      allow read: if isManager();
+      allow write: if false;
     }
   }
 }
