@@ -5,128 +5,532 @@
       "description": "System user (Manager or Member)",
       "type": "object",
       "properties": {
-        "uid": { "type": "string" },
-        "name": { "type": "string" },
-        "email": { "type": "string" },
-        "role": { "type": "string", "enum": ["manager", "member"] },
-        "fcm_token": { "type": "string", "description": "Web push token of the last browser that enabled notifications" },
-        "fcm_token_updated_at": { "type": "string", "format": "date-time" },
-        "advance_balance": { "type": "number" },
-        "sonsthapon": { "type": "number" },
-        "room_rent": { "type": "number", "description": "Monthly room rent for this member, set by the manager" }
+        "uid": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "manager",
+            "member"
+          ]
+        },
+        "fcm_token": {
+          "type": "string",
+          "description": "Web push token of the last browser that enabled notifications"
+        },
+        "fcm_token_updated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "advance_balance": {
+          "type": "number"
+        },
+        "sonsthapon": {
+          "type": "number"
+        },
+        "room_rent": {
+          "type": "number",
+          "description": "Monthly room rent for this member, set by the manager"
+        }
       },
-      "required": ["uid", "name", "email", "role", "advance_balance", "sonsthapon"]
+      "required": [
+        "uid",
+        "name",
+        "email",
+        "role",
+        "advance_balance",
+        "sonsthapon"
+      ]
     },
     "Month": {
       "title": "Month",
       "description": "Monthly accounting record",
       "type": "object",
       "properties": {
-        "month_id": { "type": "string" },
-        "status": { "type": "string", "enum": ["active", "closed"] },
+        "month_id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "closed"
+          ]
+        },
         "fixed_costs": {
           "type": "object",
-          "description": "Shared monthly costs (utilities, guard, etc.). Room rent is per member, see member_rents."
+          "description": "Amount per shared category id (equal / by_meals split)"
         },
-        "member_rents": {
+        "total_meals": {
+          "type": "number"
+        },
+        "total_bazar": {
+          "type": "number"
+        },
+        "meal_rate": {
+          "type": "number"
+        },
+        "member_costs": {
           "type": "object",
-          "description": "Snapshot of each member's room rent (keyed by uid) taken when the month is closed"
+          "description": "{ categoryId: { uid: amount } } for per_member categories"
         },
-        "total_room_rent": { "type": "number" },
-        "total_meals": { "type": "number" },
-        "total_bazar": { "type": "number" },
-        "meal_rate": { "type": "number" }
+        "member_weights": {
+          "type": "object",
+          "description": "{ uid: 0 | 0.5 | 1 } share of equal-split costs; missing = 1"
+        },
+        "categories_snapshot": {
+          "type": "array",
+          "description": "Cost categories as they were when the month closed"
+        },
+        "meal_types_snapshot": {
+          "type": "array"
+        },
+        "total_personal_bazar": {
+          "type": "number"
+        },
+        "total_fund_spending": {
+          "type": "number"
+        },
+        "total_deposits": {
+          "type": "number"
+        },
+        "fund_cash_on_hand": {
+          "type": "number"
+        },
+        "category_totals": {
+          "type": "object"
+        },
+        "grand": {
+          "type": "object"
+        },
+        "warnings": {
+          "type": "array"
+        },
+        "closed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "settlement_version": {
+          "type": "number"
+        }
       },
-      "required": ["month_id", "status", "total_meals", "total_bazar", "meal_rate"]
+      "required": [
+        "month_id",
+        "status",
+        "total_meals",
+        "total_bazar",
+        "meal_rate"
+      ]
     },
     "DailyMeal": {
       "title": "Daily Meal",
-      "description": "Daily meal record for a user",
+      "description": "Daily meal record for a user. Document id is `${user_id}_${date}` so there is one per member per day.",
       "type": "object",
       "properties": {
-        "date": { "type": "string" },
-        "user_id": { "type": "string" },
-        "meal_count": { "type": "number" }
+        "date": {
+          "type": "string"
+        },
+        "user_id": {
+          "type": "string"
+        },
+        "meal_count": {
+          "type": "number"
+        },
+        "meals": {
+          "type": "object",
+          "description": "Count per meal type id"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
       },
-      "required": ["date", "user_id", "meal_count"]
+      "required": [
+        "date",
+        "user_id",
+        "meal_count"
+      ]
     },
     "BazarFund": {
       "title": "Bazar Fund",
       "description": "Contributions to the bazar fund",
       "type": "object",
       "properties": {
-        "date": { "type": "string" },
-        "user_id": { "type": "string" },
-        "amount_contributed": { "type": "number" }
+        "date": {
+          "type": "string"
+        },
+        "user_id": {
+          "type": "string"
+        },
+        "amount_contributed": {
+          "type": "number"
+        }
       },
-      "required": ["date", "user_id", "amount_contributed"]
+      "required": [
+        "date",
+        "user_id",
+        "amount_contributed"
+      ]
     },
     "BazarExpense": {
       "title": "Bazar Expense",
       "description": "Daily bazar expenses",
       "type": "object",
       "properties": {
-        "date": { "type": "string" },
-        "user_id": { "type": "string" },
-        "amount_spent": { "type": "number" },
-        "items_description": { "type": "string" },
-        "expense_type": { "type": "string", "enum": ["from_fund", "personal"] }
+        "date": {
+          "type": "string"
+        },
+        "user_id": {
+          "type": "string"
+        },
+        "amount_spent": {
+          "type": "number"
+        },
+        "items_description": {
+          "type": "string"
+        },
+        "expense_type": {
+          "type": "string",
+          "enum": [
+            "from_fund",
+            "personal"
+          ]
+        }
       },
-      "required": ["date", "user_id", "amount_spent", "items_description", "expense_type"]
+      "required": [
+        "date",
+        "user_id",
+        "amount_spent",
+        "items_description",
+        "expense_type"
+      ]
     },
     "NotificationLog": {
       "title": "Notification Log",
       "description": "One record per scheduled or manual push run, written by the Cloudflare Worker",
       "type": "object",
       "properties": {
-        "job": { "type": "string", "enum": ["meal_reminder", "bazar_reminder", "test"] },
-        "ran_at": { "type": "string", "format": "date-time" },
-        "trigger": { "type": "string", "enum": ["cron", "manual"] },
-        "sent": { "type": "number" },
-        "failed": { "type": "number" },
-        "skipped": { "type": "number" }
+        "job": {
+          "type": "string",
+          "enum": [
+            "meal_reminder",
+            "bazar_reminder",
+            "test"
+          ]
+        },
+        "ran_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "trigger": {
+          "type": "string",
+          "enum": [
+            "cron",
+            "manual"
+          ]
+        },
+        "sent": {
+          "type": "number"
+        },
+        "failed": {
+          "type": "number"
+        },
+        "skipped": {
+          "type": "number"
+        }
       },
-      "required": ["job", "ran_at", "trigger", "sent", "failed"]
+      "required": [
+        "job",
+        "ran_at",
+        "trigger",
+        "sent",
+        "failed"
+      ]
     },
     "BazarSchedule": {
       "title": "Bazar Schedule",
       "description": "Schedule for daily bazar",
       "type": "object",
       "properties": {
-        "date": { "type": "string" },
-        "assigned_user_id": { "type": "string" }
+        "date": {
+          "type": "string"
+        },
+        "assigned_user_id": {
+          "type": "string"
+        }
       },
-      "required": ["date", "assigned_user_id"]
+      "required": [
+        "date",
+        "assigned_user_id"
+      ]
+    },
+    "CostCategory": {
+      "title": "Cost Category",
+      "description": "Manager-defined monthly cost line (shared utility or per-member charge). Seeded with eight utilities plus room rent; fully editable.",
+      "type": "object",
+      "properties": {
+        "label_bn": {
+          "type": "string"
+        },
+        "label_en": {
+          "type": "string"
+        },
+        "split_rule": {
+          "type": "string",
+          "enum": [
+            "equal",
+            "per_member",
+            "by_meals"
+          ]
+        },
+        "timing": {
+          "type": "string",
+          "enum": [
+            "prepaid",
+            "postpaid"
+          ]
+        },
+        "sort_order": {
+          "type": "number"
+        },
+        "active": {
+          "type": "boolean"
+        },
+        "builtin": {
+          "type": "string",
+          "enum": [
+            "room_rent"
+          ]
+        }
+      },
+      "required": [
+        "label_bn",
+        "label_en",
+        "split_rule",
+        "timing",
+        "sort_order",
+        "active"
+      ]
+    },
+    "MealType": {
+      "title": "Meal Type",
+      "description": "Manager-defined meal category (lunch, dinner, ...) with a weight relative to one full meal",
+      "type": "object",
+      "properties": {
+        "label_bn": {
+          "type": "string"
+        },
+        "label_en": {
+          "type": "string"
+        },
+        "weight": {
+          "type": "number"
+        },
+        "sort_order": {
+          "type": "number"
+        },
+        "active": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "label_bn",
+        "label_en",
+        "weight",
+        "sort_order",
+        "active"
+      ]
+    },
+    "Payment": {
+      "title": "Payment",
+      "description": "Money handed to the manager. Members create pending rows; the manager confirms. Only confirmed rows count in settlement.",
+      "type": "object",
+      "properties": {
+        "date": {
+          "type": "string"
+        },
+        "user_id": {
+          "type": "string"
+        },
+        "amount": {
+          "type": "number"
+        },
+        "purpose": {
+          "type": "string",
+          "enum": [
+            "fund_deposit",
+            "prepaid",
+            "settlement"
+          ]
+        },
+        "category_id": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "confirmed",
+            "rejected"
+          ]
+        },
+        "note": {
+          "type": "string"
+        },
+        "recorded_by": {
+          "type": "string"
+        },
+        "confirmed_by": {
+          "type": "string"
+        },
+        "confirmed_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "date",
+        "user_id",
+        "amount",
+        "purpose",
+        "status",
+        "recorded_by"
+      ]
+    },
+    "Settlement": {
+      "title": "Settlement",
+      "description": "One member's result for a closed month (months/{id}/settlements/{uid})",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "weight": {
+          "type": "number"
+        },
+        "meals": {
+          "type": "object"
+        },
+        "meal_count": {
+          "type": "number"
+        },
+        "meal_cost": {
+          "type": "number"
+        },
+        "shares": {
+          "type": "object"
+        },
+        "prepaid_charges": {
+          "type": "number"
+        },
+        "postpaid_charges": {
+          "type": "number"
+        },
+        "total_charges": {
+          "type": "number"
+        },
+        "credits": {
+          "type": "object"
+        },
+        "gross_due": {
+          "type": "number"
+        },
+        "advance_before": {
+          "type": "number"
+        },
+        "advance_applied": {
+          "type": "number"
+        },
+        "net_payable": {
+          "type": "number"
+        },
+        "advance_after": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "name",
+        "meal_count",
+        "meal_cost",
+        "shares",
+        "total_charges",
+        "net_payable"
+      ]
     }
   },
   "firestore": {
     "/users/{userId}": {
-      "schema": { "$ref": "#/entities/User" },
+      "schema": {
+        "$ref": "#/entities/User"
+      },
       "description": "User profiles"
     },
     "/months/{monthId}": {
-      "schema": { "$ref": "#/entities/Month" },
+      "schema": {
+        "$ref": "#/entities/Month"
+      },
       "description": "Monthly accounting records"
     },
     "/daily_meals/{mealId}": {
-      "schema": { "$ref": "#/entities/DailyMeal" },
+      "schema": {
+        "$ref": "#/entities/DailyMeal"
+      },
       "description": "Daily meals"
     },
     "/bazar_fund/{fundId}": {
-      "schema": { "$ref": "#/entities/BazarFund" },
-      "description": "Contributions to the bazar fund"
+      "schema": {
+        "$ref": "#/entities/BazarFund"
+      },
+      "description": "Legacy fund contributions (superseded by /payments)"
     },
     "/bazar_expenses/{expenseId}": {
-      "schema": { "$ref": "#/entities/BazarExpense" },
+      "schema": {
+        "$ref": "#/entities/BazarExpense"
+      },
       "description": "Daily bazar expenses"
     },
     "/notification_logs/{logId}": {
-      "schema": { "$ref": "#/entities/NotificationLog" },
+      "schema": {
+        "$ref": "#/entities/NotificationLog"
+      },
       "description": "Push notification run history"
     },
     "/bazar_schedule/{scheduleId}": {
-      "schema": { "$ref": "#/entities/BazarSchedule" },
+      "schema": {
+        "$ref": "#/entities/BazarSchedule"
+      },
       "description": "Schedule for daily bazar"
+    },
+    "/cost_categories/{categoryId}": {
+      "schema": {
+        "$ref": "#/entities/CostCategory"
+      },
+      "description": "Dynamic cost categories"
+    },
+    "/meal_types/{typeId}": {
+      "schema": {
+        "$ref": "#/entities/MealType"
+      },
+      "description": "Dynamic meal types"
+    },
+    "/payments/{paymentId}": {
+      "schema": {
+        "$ref": "#/entities/Payment"
+      },
+      "description": "Fund deposits and other payments to the manager"
+    },
+    "/months/{monthId}/settlements/{userId}": {
+      "schema": {
+        "$ref": "#/entities/Settlement"
+      },
+      "description": "Per-member settlement rows"
     }
   }
 }

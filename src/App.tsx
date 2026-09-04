@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import type { ReactNode } from 'react';
 import { AuthProvider, useAuth } from './AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
+import { ToastProvider } from './contexts/ToastContext';
 import Login from './pages/Login';
 import AdminDashboard from './pages/AdminDashboard';
 import MemberDashboard from './pages/MemberDashboard';
@@ -50,6 +51,7 @@ function RoleBasedRedirect() {
 export default function App() {
   return (
     <LanguageProvider>
+      <ToastProvider>
       <AuthProvider>
         <Router>
           <Routes>
@@ -73,6 +75,7 @@ export default function App() {
           </Routes>
         </Router>
       </AuthProvider>
+      </ToastProvider>
     </LanguageProvider>
   );
 }
