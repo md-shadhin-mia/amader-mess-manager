@@ -3,6 +3,7 @@ import { useAuth } from '../AuthContext';
 import { db } from '../firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useToast } from '../contexts/ToastContext';
 
 interface ProfileModalProps {
   onClose: () => void;
@@ -11,6 +12,7 @@ interface ProfileModalProps {
 export default function ProfileModal({ onClose }: ProfileModalProps) {
   const { userProfile } = useAuth();
   const { t } = useLanguage();
+  const { toast } = useToast();
   const [name, setName] = useState(userProfile?.name || '');
   const [phone, setPhone] = useState(userProfile?.phone || '');
   const [saving, setSaving] = useState(false);
@@ -25,11 +27,11 @@ export default function ProfileModal({ onClose }: ProfileModalProps) {
         name,
         phone
       });
-      alert(t('profileUpdated'));
+      toast(t('profileUpdated'));
       onClose();
     } catch (err) {
       console.error(err);
-      alert('Failed to update profile');
+      toast(t('saveFailed'), { tone: 'error' });
     }
     setSaving(false);
   };
