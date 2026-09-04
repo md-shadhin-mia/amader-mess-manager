@@ -9,7 +9,8 @@
         "name": { "type": "string" },
         "email": { "type": "string" },
         "role": { "type": "string", "enum": ["manager", "member"] },
-        "fcm_token": { "type": "string" },
+        "fcm_token": { "type": "string", "description": "Web push token of the last browser that enabled notifications" },
+        "fcm_token_updated_at": { "type": "string", "format": "date-time" },
         "advance_balance": { "type": "number" },
         "sonsthapon": { "type": "number" },
         "room_rent": { "type": "number", "description": "Monthly room rent for this member, set by the manager" }
@@ -73,6 +74,20 @@
       },
       "required": ["date", "user_id", "amount_spent", "items_description", "expense_type"]
     },
+    "NotificationLog": {
+      "title": "Notification Log",
+      "description": "One record per scheduled or manual push run, written by the Cloudflare Worker",
+      "type": "object",
+      "properties": {
+        "job": { "type": "string", "enum": ["meal_reminder", "bazar_reminder", "test"] },
+        "ran_at": { "type": "string", "format": "date-time" },
+        "trigger": { "type": "string", "enum": ["cron", "manual"] },
+        "sent": { "type": "number" },
+        "failed": { "type": "number" },
+        "skipped": { "type": "number" }
+      },
+      "required": ["job", "ran_at", "trigger", "sent", "failed"]
+    },
     "BazarSchedule": {
       "title": "Bazar Schedule",
       "description": "Schedule for daily bazar",
@@ -104,6 +119,10 @@
     "/bazar_expenses/{expenseId}": {
       "schema": { "$ref": "#/entities/BazarExpense" },
       "description": "Daily bazar expenses"
+    },
+    "/notification_logs/{logId}": {
+      "schema": { "$ref": "#/entities/NotificationLog" },
+      "description": "Push notification run history"
     },
     "/bazar_schedule/{scheduleId}": {
       "schema": { "$ref": "#/entities/BazarSchedule" },

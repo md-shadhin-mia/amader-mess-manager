@@ -13,6 +13,8 @@ export interface UserProfile {
   sonsthapon: number;
   /** Monthly room rent set by the manager. Each roommate can have a different amount. */
   room_rent?: number;
+  /** Firebase Cloud Messaging token of the last browser that enabled push. */
+  fcm_token?: string;
 }
 
 interface AuthContextType {

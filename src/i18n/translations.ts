@@ -66,7 +66,23 @@ export const translations = {
     invalidRent: 'রুম ভাড়া ০ বা তার বেশি হতে হবে।',
     fixedCostsHint: 'রুম ভাড়া প্রত্যেক সদস্যের জন্য আলাদা। সদস্য তালিকা থেকে প্রত্যেকের ভাড়া নির্ধারণ করুন।',
     rentColumnHint: 'প্রত্যেক সদস্যের মাসিক রুম ভাড়া লিখে সেভ করুন।',
-    notSet: 'নির্ধারিত হয়নি'
+    notSet: 'নির্ধারিত হয়নি',
+    pushNotifications: 'পুশ নোটিফিকেশন',
+    pushDescription: 'দৈনিক মিল এন্ট্রি ও বাজারের রিমাইন্ডার এই ব্রাউজারে পেতে নোটিফিকেশন চালু করুন।',
+    pushEnable: 'নোটিফিকেশন চালু করুন',
+    pushRefresh: 'আবার রেজিস্টার করুন',
+    pushSendTest: 'টেস্ট নোটিফিকেশন পাঠান',
+    pushStatusOn: 'চালু আছে',
+    pushStatusOff: 'বন্ধ আছে',
+    pushEnabled: 'নোটিফিকেশন চালু হয়েছে!',
+    pushDenied: 'ব্রাউজারে নোটিফিকেশনের অনুমতি দেওয়া হয়নি।',
+    pushEnableFailed: 'নোটিফিকেশন চালু করা যায়নি।',
+    pushUnsupported: 'এই ব্রাউজারে পুশ নোটিফিকেশন সাপোর্ট করে না।',
+    pushNotConfigured: 'পুশ নোটিফিকেশন এখনো কনফিগার করা হয়নি (VAPID key নেই)।',
+    pushTestSent: 'টেস্ট নোটিফিকেশন পাঠানো হয়েছে। কয়েক সেকেন্ডের মধ্যে পাওয়া উচিত।',
+    pushTestFailed: 'টেস্ট নোটিফিকেশন পাঠানো যায়নি।',
+    pushReceived: 'নোটিফিকেশন এসেছে',
+    pushWorkerMissing: 'টেস্ট পাঠাতে VITE_PUSH_WORKER_URL সেট করুন।'
   },
   en: {
     appTitle: 'Mess Manager',
@@ -135,7 +151,23 @@ export const translations = {
     invalidRent: 'Room rent must be 0 or more.',
     fixedCostsHint: 'Room rent is set per member. Define each member\'s rent in the Member Directory below.',
     rentColumnHint: 'Enter each member\'s monthly room rent and save.',
-    notSet: 'Not set'
+    notSet: 'Not set',
+    pushNotifications: 'Push Notifications',
+    pushDescription: 'Turn on notifications to get daily meal entry and bazar reminders in this browser.',
+    pushEnable: 'Enable notifications',
+    pushRefresh: 'Re-register this browser',
+    pushSendTest: 'Send test notification',
+    pushStatusOn: 'Enabled',
+    pushStatusOff: 'Off',
+    pushEnabled: 'Notifications enabled!',
+    pushDenied: 'Notification permission was blocked in the browser.',
+    pushEnableFailed: 'Could not enable notifications.',
+    pushUnsupported: 'This browser does not support push notifications.',
+    pushNotConfigured: 'Push is not configured yet (missing VAPID key).',
+    pushTestSent: 'Test notification sent. It should arrive within a few seconds.',
+    pushTestFailed: 'Could not send the test notification.',
+    pushReceived: 'Notification received',
+    pushWorkerMissing: 'Set VITE_PUSH_WORKER_URL to send test notifications.'
   }
 };
 

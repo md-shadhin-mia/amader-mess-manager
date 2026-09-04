@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { collection, query, getDoc, getDocs, doc, setDoc, updateDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { useLanguage } from '../contexts/LanguageContext';
 import ProfileModal from '../components/ProfileModal';
+import NotificationSettings from '../components/NotificationSettings';
 
 // Shared monthly costs split among everyone. Room rent is NOT here: each member has their own.
 const SHARED_COST_KEYS = ['buya', 'net', 'gas', 'water', 'garbage', 'guard'] as const;
@@ -311,6 +312,8 @@ export default function AdminDashboard() {
             </div>
           </form>
         </section>
+
+        <NotificationSettings />
 
         {/* Member Directory */}
         <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">

@@ -5,6 +5,7 @@ import { auth, db } from '../firebase';
 import { useAuth } from '../AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import ProfileModal from '../components/ProfileModal';
+import NotificationSettings from '../components/NotificationSettings';
 
 export default function MemberDashboard() {
   const { userProfile } = useAuth();
@@ -80,6 +81,8 @@ export default function MemberDashboard() {
             </div>
           </div>
         </section>
+
+        <NotificationSettings />
       </main>
     </div>
   );

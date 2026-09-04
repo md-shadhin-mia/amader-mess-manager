@@ -37,13 +37,14 @@ service cloud.firestore {
         && request.auth.uid == userId
         && (request.resource.data.role == 'member'
           || (request.resource.data.role == 'manager' && isFirstAdmin()));
-      // Members may edit their name and optional phone number, but never their role.
+      // Members may edit their name, phone number and push token, but never their role.
       // An admin can manage other roles but cannot demote the bootstrap admin.
       allow update: if (isManager()
           && (!isPrimaryAdmin(userId) || request.resource.data.role == 'manager'))
         || (isSignedIn()
           && request.auth.uid == userId
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'phone']))
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['name', 'phone', 'fcm_token', 'fcm_token_updated_at']))
         // Allows the first already-existing user to become the bootstrap admin in one batch.
         || (isSignedIn()
           && request.auth.uid == userId
@@ -79,6 +80,12 @@ service cloud.firestore {
     match /bazar_schedule/{scheduleId} {
       allow read: if isSignedIn();
       allow write: if isManager();
+    }
+
+    // Written only by the push-notification Cloudflare Worker (service account, bypasses rules).
+    match /notification_logs/{logId} {
+      allow read: if isManager();
+      allow write: if false;
     }
   }
 }
