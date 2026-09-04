@@ -21,8 +21,8 @@ and a `per_mess` breakdown. Tokens that FCM reports as unregistered are
 cleared from the user's account automatically.
 
 Collection-group queries need the single-field overrides in
-`firestore.indexes.json` at the repo root; the merge workflow deploys them
-with `firebase deploy --only firestore`.
+`firestore.indexes.json` at the repo root. Deploy them together with the
+rules from your machine: `npx firebase-tools deploy --only firestore`.
 
 ## One-time setup
 

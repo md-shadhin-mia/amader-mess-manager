@@ -28,10 +28,30 @@ cp .env.example .env            # VAPID key + worker URL are optional
 bun run dev
 ```
 
-Deploying rules and indexes, seeding defaults and deploying hosting all
-happen in the merge workflow (`.github/workflows/firebase-hosting-merge.yml`).
-The `FIREBASE_SERVICE_ACCOUNT_AMADER_MESS_MANAGER` secret needs Firebase Rules
-Admin, Cloud Datastore User and Firebase Authentication Admin roles.
+Hosting deploys automatically on every merge to `main`
+(`.github/workflows/firebase-hosting-merge.yml`). Pull requests get a preview
+channel.
+
+### Deploying Firestore rules (manual)
+
+The CI service account only has hosting permissions, so rules and indexes
+are deployed by the project owner from their own machine. Run this once
+after setting up, and again whenever `firestore.rules` or
+`firestore.indexes.json` changes:
+
+```sh
+npx firebase-tools login          # once
+npx firebase-tools deploy --only firestore
+```
+
+Deploy the rules **before** merging a change that depends on them, so the
+live app never runs against older rules.
+
+### Seeding
+
+Nothing to run: creating a mess in the app seeds its default cost
+categories and meal types. `bun run seed --add-missing` is an optional local
+tool for adding newly introduced defaults to existing messes.
 
 ## Scripts (firebase-admin, need a service account)
 
@@ -40,15 +60,16 @@ Set `GOOGLE_APPLICATION_CREDENTIALS=/path/to/sa.json` or
 
 | Command | What it does |
 | --- | --- |
-| `bun run seed [--add-missing] [--mess <id>]` | Seeds default categories and meal types in every mess (idempotent). |
+| `bun run seed [--add-missing] [--mess <id>]` | Optional: adds default categories and meal types to existing messes (idempotent). |
 | `bun run migrate --name "My Mess" [--apply]` | Moves legacy single-tenant data into one mess. Dry-run by default. |
 | `bun run super-admin --email a@b.com [--remove]` | Grants the `super_admin` claim. Sign out and in afterwards. |
 | `bun run test` | Settlement, number and tenant unit tests. |
 
 ### Migrating an existing single-tenant install
 
-1. Merge this version: the workflow deploys rules that keep the legacy
-   top-level collections working alongside `messes/**`.
+1. Deploy the rules (`npx firebase-tools deploy --only firestore`); they keep
+   the legacy top-level collections working alongside `messes/**`. Then merge
+   so hosting deploys the new client.
 2. Run `bun run migrate --name "Your Mess"` and check the counts, then
    `--apply`. The old manager becomes the owner; every user becomes a member.
 3. Users sign in and land in the migrated mess. Re-run the script once to
