@@ -18,6 +18,8 @@ jobs:
           bun-version: latest
 
       - run: bun install --frozen-lockfile
+      - run: bun run lint
+      - run: bun run test
       - run: bun run build
 
       - uses: FirebaseExtended/action-hosting-deploy@v0

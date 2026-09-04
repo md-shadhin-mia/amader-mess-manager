@@ -1,23 +1,10 @@
 import { collection, doc, getDocs, writeBatch, type Firestore } from 'firebase/firestore';
+import { DEFAULT_MEAL_TYPES, MEAL_TYPES_COLLECTION, type MealType } from './defaults';
 
-export interface MealType {
-  id: string;
-  label_bn: string;
-  label_en: string;
-  /** How much of a "full meal" one unit of this type counts as. Breakfast might be 0.5. */
-  weight: number;
-  sort_order: number;
-  active: boolean;
-}
+export { DEFAULT_MEAL_TYPES, MEAL_TYPES_COLLECTION } from './defaults';
+export type { MealType } from './defaults';
 
-export const MEAL_TYPES_COLLECTION = 'meal_types';
-
-export const DEFAULT_MEAL_TYPES: MealType[] = [
-  { id: 'lunch', label_bn: 'দুপুর', label_en: 'Lunch', weight: 1, sort_order: 10, active: true },
-  { id: 'dinner', label_bn: 'রাত', label_en: 'Dinner', weight: 1, sort_order: 20, active: true },
-  { id: 'others', label_bn: 'অন্যান্য', label_en: 'Others', weight: 1, sort_order: 30, active: true },
-];
-
+/** Browser-side one-time seed, run by the first manager to open the dashboard. */
 export async function seedMealTypesIfEmpty(db: Firestore): Promise<boolean> {
   const existing = await getDocs(collection(db, MEAL_TYPES_COLLECTION));
   if (!existing.empty) return false;

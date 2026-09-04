@@ -1,4 +1,4 @@
-name: Deploy to Firebase Hosting on merge
+name: Deploy to Firebase on merge
 
 on:
   push:
@@ -7,6 +7,9 @@ on:
 
 permissions:
   contents: read
+
+env:
+  FIREBASE_PROJECT_ID: amader-mess-manager
 
 jobs:
   build_and_deploy:
@@ -19,7 +22,25 @@ jobs:
           bun-version: latest
 
       - run: bun install --frozen-lockfile
+      - run: bun run lint
+      - run: bun run test
       - run: bun run build
+
+      # The service account used for hosting also deploys rules and seeds data.
+      - name: Write service account credentials
+        env:
+          SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AMADER_MESS_MANAGER }}
+        run: |
+          printf '%s' "$SERVICE_ACCOUNT_JSON" > "$RUNNER_TEMP/firebase-sa.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/firebase-sa.json" >> "$GITHUB_ENV"
+
+      # Rules go first so the new app never runs against the old rules.
+      - name: Deploy Firestore rules
+        run: npx --yes firebase-tools@latest deploy --only firestore:rules --project "$FIREBASE_PROJECT_ID" --non-interactive
+
+      # Idempotent: only writes cost categories / meal types that do not exist yet.
+      - name: Seed default cost categories and meal types
+        run: bun run seed --add-missing
 
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
@@ -27,3 +48,7 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AMADER_MESS_MANAGER }}
           channelId: live
           projectId: amader-mess-manager
+
+      - name: Remove credentials
+        if: always()
+        run: rm -f "$RUNNER_TEMP/firebase-sa.json"
