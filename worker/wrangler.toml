@@ -10,6 +10,8 @@ FIREBASE_PROJECT_ID = "amader-mess-manager"
 APP_URL = "https://amader-mess-manager.web.app"
 # Origin allowed to call POST /test from the browser. Use "*" while developing locally.
 ALLOWED_ORIGIN = "https://amader-mess-manager.web.app"
+# Timezone the mess lives in; entries are dated by this calendar.
+TIMEZONE = "Asia/Dhaka"
 # Which cron expression maps to which job. Must match the [triggers] list below.
 # Cloudflare evaluates crons in UTC. Asia/Dhaka is UTC+6.
 MEAL_REMINDER_CRON = "0 14 * * *"   # 20:00 Dhaka: remind members who have not logged today's meal

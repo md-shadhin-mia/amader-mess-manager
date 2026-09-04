@@ -29,9 +29,14 @@ interface Recipient {
   fcmToken: string;
 }
 
-/** The app stores dates as the UTC ISO date, so the worker must use the same convention. */
-export function todayIsoDate(now = new Date()): string {
-  return now.toISOString().slice(0, 10);
+/**
+ * The app stamps entries with the member's local calendar date, so the worker
+ * must resolve "today" in the mess's timezone (Asia/Dhaka by default), not UTC.
+ */
+export function todayIsoDate(now = new Date(), timeZone = 'Asia/Dhaka'): string {
+  const parts = new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(now);
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? '';
+  return `${get('year')}-${get('month')}-${get('day')}`;
 }
 
 export async function connect(env: Env): Promise<{ db: FirestoreClient; accessToken: string }> {
@@ -95,13 +100,13 @@ async function dispatch(
   return report;
 }
 
-function newReport(job: JobName, trigger: Trigger): JobReport {
-  return { job, trigger, ran_at: new Date().toISOString(), date: todayIsoDate(), sent: 0, failed: 0, skipped: 0, errors: [] };
+function newReport(job: JobName, trigger: Trigger, env: Env): JobReport {
+  return { job, trigger, ran_at: new Date().toISOString(), date: todayIsoDate(new Date(), env.TIMEZONE || 'Asia/Dhaka'), sent: 0, failed: 0, skipped: 0, errors: [] };
 }
 
 /** Evening reminder to everyone with a push token who has not logged a meal today. */
 export async function runMealReminder(env: Env, trigger: Trigger): Promise<JobReport> {
-  const report = newReport('meal_reminder', trigger);
+  const report = newReport('meal_reminder', trigger, env);
   const { db, accessToken } = await connect(env);
 
   const [users, mealsToday] = await Promise.all([
@@ -131,7 +136,7 @@ export async function runMealReminder(env: Env, trigger: Trigger): Promise<JobRe
 
 /** Morning reminder to whoever is assigned to today's bazar. */
 export async function runBazarReminder(env: Env, trigger: Trigger): Promise<JobReport> {
-  const report = newReport('bazar_reminder', trigger);
+  const report = newReport('bazar_reminder', trigger, env);
   const { db, accessToken } = await connect(env);
 
   const schedule = await db.query<{ assigned_user_id?: string }>('bazar_schedule', {
@@ -160,7 +165,7 @@ export async function runBazarReminder(env: Env, trigger: Trigger): Promise<JobR
 
 /** One push to a single user's registered browser, used by the in-app "Send test notification" button. */
 export async function runTestPush(env: Env, uid: string): Promise<JobReport & { reason?: string }> {
-  const report = newReport('test', 'manual');
+  const report = newReport('test', 'manual', env);
   const { db, accessToken } = await connect(env);
 
   const user = await db.get<UserDoc>(`users/${uid}`);
