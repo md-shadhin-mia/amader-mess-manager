@@ -11,6 +11,8 @@ export interface UserProfile {
   role: 'manager' | 'member';
   advance_balance: number;
   sonsthapon: number;
+  /** Monthly room rent set by the manager. Each roommate can have a different amount. */
+  room_rent?: number;
 }
 
 interface AuthContextType {
@@ -76,6 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               role,
               advance_balance: 0,
               sonsthapon: 0,
+              room_rent: 0,
             };
 
             if (role === 'manager') {

@@ -56,7 +56,17 @@ export const translations = {
     adminRemoved: 'অ্যাডমিনের ভূমিকা সরানো হয়েছে!',
     primaryAdmin: 'মূল অ্যাডমিন',
     primaryAdminProtected: 'মূল অ্যাডমিনকে সরানো যাবে না।',
-    lastAdminProtected: 'অন্তত একজন অ্যাডমিন থাকা জরুরি।'
+    lastAdminProtected: 'অন্তত একজন অ্যাডমিন থাকা জরুরি।',
+    roomRent: 'রুম ভাড়া',
+    myRoomRent: 'আমার রুম ভাড়া',
+    totalRoomRent: 'মোট রুম ভাড়া',
+    saveRent: 'সেভ',
+    rentUpdated: 'রুম ভাড়া আপডেট হয়েছে!',
+    rentUpdateFailed: 'রুম ভাড়া আপডেট করা যায়নি।',
+    invalidRent: 'রুম ভাড়া ০ বা তার বেশি হতে হবে।',
+    fixedCostsHint: 'রুম ভাড়া প্রত্যেক সদস্যের জন্য আলাদা। সদস্য তালিকা থেকে প্রত্যেকের ভাড়া নির্ধারণ করুন।',
+    rentColumnHint: 'প্রত্যেক সদস্যের মাসিক রুম ভাড়া লিখে সেভ করুন।',
+    notSet: 'নির্ধারিত হয়নি'
   },
   en: {
     appTitle: 'Mess Manager',
@@ -115,7 +125,17 @@ export const translations = {
     adminRemoved: 'Admin role has been removed!',
     primaryAdmin: 'Primary admin',
     primaryAdminProtected: 'The primary admin cannot be removed.',
-    lastAdminProtected: 'At least one admin is required.'
+    lastAdminProtected: 'At least one admin is required.',
+    roomRent: 'Room Rent',
+    myRoomRent: 'My Room Rent',
+    totalRoomRent: 'Total Room Rent',
+    saveRent: 'Save',
+    rentUpdated: 'Room rent updated!',
+    rentUpdateFailed: 'Could not update the room rent.',
+    invalidRent: 'Room rent must be 0 or more.',
+    fixedCostsHint: 'Room rent is set per member. Define each member\'s rent in the Member Directory below.',
+    rentColumnHint: 'Enter each member\'s monthly room rent and save.',
+    notSet: 'Not set'
   }
 };
 

@@ -7,6 +7,28 @@ import { collection, query, getDoc, getDocs, doc, setDoc, updateDoc, onSnapshot,
 import { useLanguage } from '../contexts/LanguageContext';
 import ProfileModal from '../components/ProfileModal';
 
+// Shared monthly costs split among everyone. Room rent is NOT here: each member has their own.
+const SHARED_COST_KEYS = ['buya', 'net', 'gas', 'water', 'garbage', 'guard'] as const;
+type SharedCostKey = typeof SHARED_COST_KEYS[number];
+type SharedCosts = Record<SharedCostKey, number>;
+const EMPTY_SHARED_COSTS: SharedCosts = { buya: 0, net: 0, gas: 0, water: 0, garbage: 0, guard: 0 };
+
+// Older months stored a single shared "rent"; ignore it and only keep the known shared keys.
+function toSharedCosts(raw: unknown): SharedCosts {
+  const source = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
+  const result = { ...EMPTY_SHARED_COSTS };
+  for (const key of SHARED_COST_KEYS) {
+    const value = Number(source[key]);
+    result[key] = Number.isFinite(value) ? value : 0;
+  }
+  return result;
+}
+
+function memberRent(member: { room_rent?: unknown }): number {
+  const value = Number(member.room_rent);
+  return Number.isFinite(value) && value >= 0 ? value : 0;
+}
+
 export default function AdminDashboard() {
   const { userProfile } = useAuth();
   const { t, lang, setLang } = useLanguage();
@@ -15,9 +37,10 @@ export default function AdminDashboard() {
   const [primaryAdminUid, setPrimaryAdminUid] = useState<string | null>(null);
   const [activeMonth, setActiveMonth] = useState<any>(null);
   const [showProfile, setShowProfile] = useState(false);
-  const [costs, setCosts] = useState({
-    rent: 0, buya: 0, net: 0, gas: 0, water: 0, garbage: 0, guard: 0
-  });
+  const [costs, setCosts] = useState<SharedCosts>(EMPTY_SHARED_COSTS);
+  // Unsaved per-member rent edits, keyed by uid. Only present while a value differs from Firestore.
+  const [rentDrafts, setRentDrafts] = useState<Record<string, string>>({});
+  const [savingRentFor, setSavingRentFor] = useState<string | null>(null);
 
   useEffect(() => {
     const usersUnsub = onSnapshot(query(collection(db, 'users')), (snap) => {
@@ -33,7 +56,7 @@ export default function AdminDashboard() {
       if (active) {
         setActiveMonth({ id: active.id, ...active.data() });
         if (active.data().fixed_costs) {
-          setCosts(active.data().fixed_costs);
+          setCosts(toSharedCosts(active.data().fixed_costs));
         }
       } else {
         setActiveMonth(null);
@@ -76,6 +99,37 @@ export default function AdminDashboard() {
     } catch (err) {
       console.error('Could not remove the admin role:', err);
       alert('Failed to remove this admin.');
+    }
+  };
+
+  const totalRoomRent = users.reduce((sum, member) => sum + memberRent(member), 0);
+
+  const rentInputValue = (member: any) =>
+    rentDrafts[member.id] ?? String(memberRent(member));
+
+  const hasRentChange = (member: any) =>
+    member.id in rentDrafts && Number(rentDrafts[member.id]) !== memberRent(member);
+
+  const saveRent = async (member: any) => {
+    const value = Number(rentDrafts[member.id]);
+    if (!Number.isFinite(value) || value < 0) {
+      alert(t('invalidRent'));
+      return;
+    }
+    setSavingRentFor(member.id);
+    try {
+      await updateDoc(doc(db, 'users', member.id), { room_rent: value });
+      setRentDrafts((drafts) => {
+        const next = { ...drafts };
+        delete next[member.id];
+        return next;
+      });
+      alert(t('rentUpdated'));
+    } catch (err) {
+      console.error('Could not update the room rent:', err);
+      alert(t('rentUpdateFailed'));
+    } finally {
+      setSavingRentFor(null);
     }
   };
 
@@ -130,14 +184,23 @@ export default function AdminDashboard() {
 
         const mealRate = totalMeals > 0 ? totalBazar / totalMeals : 0;
         
-        const fixedCostsTotal = Object.values(costs).reduce((acc: number, curr) => acc + Number(curr), 0);
-        
+        const sharedCostsTotal = SHARED_COST_KEYS.reduce((acc, key) => acc + Number(costs[key] ?? 0), 0);
+
+        // Snapshot each member's rent so later rent changes do not rewrite closed months.
+        const memberRents: Record<string, number> = {};
+        users.forEach((member) => {
+          memberRents[member.id] = memberRent(member);
+        });
+        const roomRentTotal = Object.values(memberRents).reduce((acc: number, curr: number) => acc + curr, 0);
+
         await updateDoc(doc(db, 'months', activeMonth.id), {
           status: 'closed',
           total_meals: totalMeals,
           total_bazar: totalBazar,
           meal_rate: mealRate,
-          fixed_costs_total: fixedCostsTotal
+          member_rents: memberRents,
+          total_room_rent: roomRentTotal,
+          fixed_costs_total: sharedCostsTotal + roomRentTotal
         });
 
         alert(`Month closed successfully! Meal Rate: ${mealRate.toFixed(2)} TK`);
@@ -222,14 +285,20 @@ export default function AdminDashboard() {
 
         {/* Fixed Costs Settings */}
         <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">{t('fixedCosts')}</h2>
+          <h2 className="text-lg font-medium text-gray-900 mb-1">{t('fixedCosts')}</h2>
+          <p className="text-sm text-gray-500 mb-4">{t('fixedCostsHint')}</p>
+          <div className="bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 mb-4 flex items-center justify-between">
+            <span className="text-sm font-medium text-blue-900">{t('totalRoomRent')}</span>
+            <span className="text-lg font-semibold text-blue-900">{totalRoomRent} ৳</span>
+          </div>
           <form onSubmit={handleUpdateCosts} className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {Object.keys(costs).map((key) => (
+            {SHARED_COST_KEYS.map((key) => (
               <div key={key}>
                 <label className="block text-sm text-gray-600 mb-1 capitalize">{key}</label>
                 <input 
                   type="number"
-                  value={costs[key as keyof typeof costs]}
+                  min={0}
+                  value={costs[key]}
                   onChange={(e) => setCosts({...costs, [key]: Number(e.target.value)})}
                   className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                 />
@@ -245,9 +314,10 @@ export default function AdminDashboard() {
 
         {/* Member Directory */}
         <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex justify-between items-center mb-1">
             <h2 className="text-lg font-medium text-gray-900">{t('memberDirectory')}</h2>
           </div>
+          <p className="text-sm text-gray-500 mb-4">{t('rentColumnHint')}</p>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -256,6 +326,7 @@ export default function AdminDashboard() {
                   <th className="p-4 font-medium">{t('phone')}</th>
                   <th className="p-4 font-medium">{t('email')}</th>
                   <th className="p-4 font-medium">{t('role')}</th>
+                  <th className="p-4 font-medium">{t('roomRent')}</th>
                   <th className="p-4 font-medium">{t('advance')}</th>
                   <th className="p-4 font-medium">{t('sonsthapon')}</th>
                   <th className="p-4 font-medium">{t('actions')}</th>
@@ -271,6 +342,32 @@ export default function AdminDashboard() {
                       <span className={`px-2 py-1 rounded text-xs font-medium ${u.role === 'manager' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'}`}>
                         {u.role === 'manager' ? t('manager') : t('member')}
                       </span>
+                    </td>
+                    <td className="p-4">
+                      <form
+                        onSubmit={(e) => { e.preventDefault(); void saveRent(u); }}
+                        className="flex items-center gap-2"
+                      >
+                        <input
+                          type="number"
+                          min={0}
+                          step={1}
+                          aria-label={`${t('roomRent')}: ${u.name}`}
+                          value={rentInputValue(u)}
+                          onChange={(e) => setRentDrafts({ ...rentDrafts, [u.id]: e.target.value })}
+                          className="w-28 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                        />
+                        <span className="text-gray-500 text-sm">৳</span>
+                        {hasRentChange(u) && (
+                          <button
+                            type="submit"
+                            disabled={savingRentFor === u.id}
+                            className="text-xs font-medium bg-green-600 text-white px-3 py-1.5 rounded-lg hover:bg-green-700 disabled:opacity-50 whitespace-nowrap"
+                          >
+                            {savingRentFor === u.id ? t('loading') : t('saveRent')}
+                          </button>
+                        )}
+                      </form>
                     </td>
                     <td className="p-4 text-gray-700 font-medium">{u.advance_balance} ৳</td>
                     <td className="p-4 text-gray-700 font-medium">{u.sonsthapon} ৳</td>

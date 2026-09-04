@@ -11,7 +11,8 @@
         "role": { "type": "string", "enum": ["manager", "member"] },
         "fcm_token": { "type": "string" },
         "advance_balance": { "type": "number" },
-        "sonsthapon": { "type": "number" }
+        "sonsthapon": { "type": "number" },
+        "room_rent": { "type": "number", "description": "Monthly room rent for this member, set by the manager" }
       },
       "required": ["uid", "name", "email", "role", "advance_balance", "sonsthapon"]
     },
@@ -23,8 +24,14 @@
         "month_id": { "type": "string" },
         "status": { "type": "string", "enum": ["active", "closed"] },
         "fixed_costs": {
-          "type": "object"
+          "type": "object",
+          "description": "Shared monthly costs (utilities, guard, etc.). Room rent is per member, see member_rents."
         },
+        "member_rents": {
+          "type": "object",
+          "description": "Snapshot of each member's room rent (keyed by uid) taken when the month is closed"
+        },
+        "total_room_rent": { "type": "number" },
         "total_meals": { "type": "number" },
         "total_bazar": { "type": "number" },
         "meal_rate": { "type": "number" }

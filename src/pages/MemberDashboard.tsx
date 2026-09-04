@@ -59,7 +59,13 @@ export default function MemberDashboard() {
 
         <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <h2 className="text-lg font-medium text-gray-900 mb-4">{t('ledgerSummary')}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-500 mb-1">{t('myRoomRent')}</p>
+              <p className="text-2xl font-semibold text-gray-900">
+                {typeof userProfile?.room_rent === 'number' ? `${userProfile.room_rent} ৳` : t('notSet')}
+              </p>
+            </div>
             <div className="bg-gray-50 p-4 rounded-lg">
               <p className="text-sm text-gray-500 mb-1">{t('totalMealsLogged')}</p>
               <p className="text-2xl font-semibold text-gray-900">{meals.reduce((sum, meal) => sum + meal.meal_count, 0)}</p>
