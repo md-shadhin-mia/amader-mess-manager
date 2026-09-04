@@ -10,7 +10,9 @@
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
     "test": "tsx --test src/lib/*.test.ts",
-    "seed": "tsx scripts/seed.ts"
+    "seed": "tsx scripts/seed.ts",
+    "migrate": "tsx scripts/migrate-to-multitenant.ts",
+    "super-admin": "tsx scripts/set-super-admin.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
