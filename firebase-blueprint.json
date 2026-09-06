@@ -563,9 +563,39 @@
         "mess_id",
         "created_by"
       ]
+    },
+    "Admin": {
+      "title": "Admin",
+      "description": "Platform administrator. Authorization is based on the status property.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "inactive"
+          ]
+        }
+      },
+      "required": [
+        "uid",
+        "status"
+      ]
     }
   },
   "firestore": {
+    "/admins/{userId}": {
+      "schema": {
+        "$ref": "#/entities/Admin"
+      },
+      "description": "Platform administrators with active status"
+    },
     "/users/{userId}": {
       "schema": {
         "$ref": "#/entities/User"

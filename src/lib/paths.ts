@@ -32,6 +32,9 @@ export const settlementRef = (db: Firestore, messId: string, monthId: string, ui
 
 export const userRef = (db: Firestore, uid: string): DocumentReference => doc(db, 'users', uid);
 
+export const adminRef = (db: Firestore, uid: string): DocumentReference => doc(db, 'admins', uid);
+export const adminsCol = (db: Firestore): CollectionReference => collection(db, 'admins');
+
 export const joinCodeRef = (db: Firestore, code: string): DocumentReference => doc(db, 'join_codes', code);
 
 export const mealDocId = (uid: string, date: string): string => `${uid}_${date}`;

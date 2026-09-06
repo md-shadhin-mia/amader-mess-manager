@@ -76,6 +76,6 @@ export async function sendTestPush(): Promise<{ ok: boolean; message: string }> 
     method: 'POST',
     headers: { Authorization: `Bearer ${idToken}` },
   });
-  const body = await response.json().catch(() => ({}));
+  const body = (await response.json().catch(() => ({}))) as { message?: string; error?: string };
   return { ok: response.ok, message: body.message || body.error || response.statusText };
 }

@@ -43,12 +43,21 @@ export interface Account {
   name: string;
   email: string;
   phone: string;
+  status?: string;
   fcm_token?: string;
   fcm_token_updated_at?: unknown;
   current_mess_id?: string | null;
   /** Client-side index of memberships for the switcher. Rules never trust it. */
   messes?: Record<string, { name: string }>;
   created_at?: unknown;
+}
+
+export interface AdminRecord {
+  uid: string;
+  email: string;
+  status: 'active' | 'inactive';
+  created_at?: unknown;
+  updated_at?: unknown;
 }
 
 export interface JoinCode {
