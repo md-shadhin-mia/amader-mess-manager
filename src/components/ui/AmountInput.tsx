@@ -29,9 +29,9 @@ export default function AmountInput({ value, onChange, chips, placeholder, class
           value={value}
           placeholder={placeholder}
           onChange={(e) => onChange(normalizeDigits(e.target.value).replace(/[^0-9.]/g, ''))}
-          className={`w-full px-4 py-3 pr-10 bg-gray-50 border border-gray-200 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${className}`}
+          className={`w-full px-4 py-3 pr-10 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-lg text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${className}`}
         />
-        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">৳</span>
+        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">৳</span>
       </div>
       {chips && chips.length > 0 && (
         <div className="flex flex-wrap gap-2 mt-2">
@@ -41,7 +41,9 @@ export default function AmountInput({ value, onChange, chips, placeholder, class
               type="button"
               onClick={() => onChange(String(chip))}
               className={`px-3 py-1.5 rounded-full text-sm font-medium border ${
-                value === String(chip) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300'
+                value === String(chip)
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-500'
               }`}
             >
               {chip}

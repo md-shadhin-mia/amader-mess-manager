@@ -78,43 +78,43 @@ export default function MonthLedger() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24">
       {showClose && month && currentUser && (
         <CloseMonthDialog month={month} users={allMembers} categories={categories} mealTypes={mealTypes} entries={entries} closedBy={currentUser.uid} onClose={() => setShowClose(false)} />
       )}
       <PageHeader title={`${t('ledger')} · ${monthId ? formatMonthId(monthId) : ''}`} subtitle={t('ledgerHint')} backTo="/admin/months">
-        {month && <Link to={`/admin/months/${month.id}`} className="text-sm font-medium text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50">{t('viewReport')}</Link>}
+        {month && <Link to={`/admin/months/${month.id}`} className="text-sm font-medium text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">{t('viewReport')}</Link>}
         {editable && <button onClick={() => setShowClose(true)} className="text-sm font-medium bg-red-600 text-white px-3 py-1.5 rounded-lg hover:bg-red-700">{t('closeMonth')}</button>}
       </PageHeader>
 
       <main className="max-w-6xl mx-auto p-4 md:p-6 space-y-4">
-        {!month && <p className="text-sm text-gray-500">{t('noMonths')}</p>}
+        {!month && <p className="text-sm text-gray-500 dark:text-gray-400">{t('noMonths')}</p>}
 
         {month && !editable && (
-          <div className="bg-gray-100 border border-gray-200 text-gray-800 text-sm rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-800 dark:text-gray-200 text-sm rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <span>{t('closedReadOnly')}</span>
-            <button onClick={reopen} disabled={busy} className="text-sm font-medium text-gray-700 border border-gray-300 bg-white px-4 py-2 rounded-lg hover:bg-gray-50 disabled:opacity-50">{t('reopenMonth')}</button>
+            <button onClick={reopen} disabled={busy} className="text-sm font-medium text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50">{t('reopenMonth')}</button>
           </div>
         )}
 
         {month && (
           <>
             <div className="flex flex-wrap items-center gap-2 text-sm">
-              <span className={`px-2 py-1 rounded font-medium ${month.status === 'active' ? 'bg-green-100 text-green-800' : month.status === 'backfill' ? 'bg-amber-100 text-amber-800' : 'bg-gray-200 text-gray-800'}`}>
+              <span className={`px-2 py-1 rounded font-medium ${month.status === 'active' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' : month.status === 'backfill' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300' : 'bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200'}`}>
                 {month.status === 'active' ? t('active') : month.status === 'backfill' ? t('backfill') : t('closed')}
               </span>
               {totals && (
                 <>
-                  <span className="text-gray-600">{t('totalMeals')}: <strong className="text-gray-900">{formatCount(totals.total_meals, lang)}</strong></span>
-                  <span className="text-gray-600">{t('totalBazar')}: <strong className="text-gray-900">{formatTk(totals.total_bazar, lang, 0)}</strong></span>
-                  <span className="text-gray-600">{t('mealRate')}: <strong className="text-gray-900">{formatTk(totals.meal_rate, lang)}</strong></span>
-                  <span className="text-gray-600">{t('grandCharges')}: <strong className="text-gray-900">{formatTk(totals.grand.charges, lang, 0)}</strong></span>
+                  <span className="text-gray-600 dark:text-gray-400">{t('totalMeals')}: <strong className="text-gray-900 dark:text-white">{formatCount(totals.total_meals, lang)}</strong></span>
+                  <span className="text-gray-600 dark:text-gray-400">{t('totalBazar')}: <strong className="text-gray-900 dark:text-white">{formatTk(totals.total_bazar, lang, 0)}</strong></span>
+                  <span className="text-gray-600 dark:text-gray-400">{t('mealRate')}: <strong className="text-gray-900 dark:text-white">{formatTk(totals.meal_rate, lang)}</strong></span>
+                  <span className="text-gray-600 dark:text-gray-400">{t('grandCharges')}: <strong className="text-gray-900 dark:text-white">{formatTk(totals.grand.charges, lang, 0)}</strong></span>
                 </>
               )}
             </div>
 
             {totals && totals.warnings.length > 0 && (
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-900">
+              <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-sm text-amber-900 dark:text-amber-200">
                 <p className="font-medium mb-1">{t('warnings')}</p>
                 <ul className="list-disc pl-5 space-y-0.5">
                   {totals.warnings.map((w) => {
@@ -122,19 +122,19 @@ export default function MonthLedger() {
                     return <li key={w}>{t(key)}{detail ? ` (${allMembers.find((m) => m.uid === detail)?.name || detail})` : ''}</li>;
                   })}
                 </ul>
-                <p className="text-xs mt-1">{t('inactiveCategoryHint')}</p>
+                <p className="text-xs mt-1 text-amber-700 dark:text-amber-300">{t('inactiveCategoryHint')}</p>
               </div>
             )}
 
-            <div className="flex gap-1 bg-gray-100 rounded-lg p-1 w-fit">
+            <div className="flex gap-1 bg-gray-100 dark:bg-gray-900 rounded-lg p-1 w-fit border border-transparent dark:border-gray-800">
               {tabs.map((item) => (
-                <button key={item.id} onClick={() => setTab(item.id)} className={`px-4 py-1.5 rounded-md text-sm font-medium ${tab === item.id ? 'bg-white shadow text-blue-700' : 'text-gray-500'}`}>
+                <button key={item.id} onClick={() => setTab(item.id)} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${tab === item.id ? 'bg-white dark:bg-gray-800 shadow text-blue-700 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}>
                   {t(item.key)}
                 </button>
               ))}
             </div>
 
-            <section className="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-100">
+            <section className="bg-white dark:bg-gray-900 p-4 md:p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800">
               {tab === 'costs' && <MonthCostsForm month={month} categories={activeCategories} users={allMembers.filter((m) => m.status === 'active' || (month.member_weights?.[m.uid] ?? 0) > 0)} />}
               {tab === 'meals' && <MealsGrid messId={messId} monthId={month.id} members={gridMembers} mealTypes={activeMealTypes} meals={entries.meals} disabled={!editable} />}
               {tab === 'bazar' && <BazarTable messId={messId} monthId={month.id} members={gridMembers} expenses={entries.expenses} suggestions={suggestions} disabled={!editable} />}
@@ -144,7 +144,7 @@ export default function MonthLedger() {
         )}
 
         {month && editable && (
-          <p className="text-xs text-gray-400">{t('ledgerCloseHint')} <button onClick={() => navigate(`/admin/months/${month.id}`)} className="text-blue-600 underline">{t('viewReport')}</button></p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">{t('ledgerCloseHint')} <button onClick={() => navigate(`/admin/months/${month.id}`)} className="text-blue-600 dark:text-blue-400 underline">{t('viewReport')}</button></p>
         )}
       </main>
     </div>

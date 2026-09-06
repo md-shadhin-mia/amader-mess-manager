@@ -6,6 +6,7 @@ import { db } from '../firebase';
 import { memberRef, userRef } from '../lib/paths';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useToast } from '../contexts/ToastContext';
+import ThemeToggle from './ThemeToggle';
 
 interface ProfileModalProps {
   onClose: () => void;
@@ -49,22 +50,41 @@ export default function ProfileModal({ onClose }: ProfileModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl shadow-lg w-full max-w-md overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-          <h2 className="text-lg font-semibold text-gray-800">{t('profileUpdate')}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">{t('close')}</button>
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg w-full max-w-md overflow-hidden border border-gray-100 dark:border-gray-700 transition-colors">
+        <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800/80">
+          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{t('profileUpdate')}</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">✕</button>
         </div>
         <form onSubmit={handleSave} className="p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t('name')}</label>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20" required />
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('name')}</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              required
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t('phone')} ({t('optional')})</label>
-            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('phone')} ({t('optional')})</label>
+            <input
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            />
           </div>
-          <button type="submit" disabled={saving} className="w-full bg-blue-600 text-white font-medium py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('theme')}</label>
+            <ThemeToggle variant="segmented" className="w-full justify-between" />
+          </div>
+          <button
+            type="submit"
+            disabled={saving}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition-colors disabled:opacity-50"
+          >
             {saving ? t('loading') : t('saveProfile')}
           </button>
         </form>

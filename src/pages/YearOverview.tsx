@@ -36,26 +36,26 @@ export default function YearOverview() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-12 print:bg-white">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-12 print:bg-white">
       <PageHeader title={`${t('yearOverview')} · ${year}`} backTo="/admin">
-        <select value={year} onChange={(e) => setYear(Number(e.target.value))} className="text-sm px-3 py-1.5 bg-white border border-gray-200 rounded-lg">
+        <select value={year} onChange={(e) => setYear(Number(e.target.value))} className="text-sm px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 rounded-lg">
           {years.map((y) => <option key={y} value={y}>{y}</option>)}
         </select>
-        <Link to="/admin/months" className="text-sm font-medium text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50">{t('months')}</Link>
-        <button onClick={exportCsv} disabled={months.length === 0} className="text-sm font-medium text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 disabled:opacity-50">{t('downloadCsv')}</button>
+        <Link to="/admin/months" className="text-sm font-medium text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">{t('months')}</Link>
+        <button onClick={exportCsv} disabled={months.length === 0} className="text-sm font-medium text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50">{t('downloadCsv')}</button>
         <button onClick={() => window.print()} className="text-sm font-medium bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700">{t('print')}</button>
       </PageHeader>
 
       <main className="max-w-5xl mx-auto p-4 md:p-6 space-y-6 print:p-0">
         <div className="hidden print:block"><h1 className="text-xl font-semibold">{t('appTitle')} · {t('yearOverview')} · {year}</h1></div>
-        {loading && <p className="text-sm text-gray-400">{t('loading')}</p>}
-        {!loading && months.length === 0 && <p className="text-sm text-gray-500">{t('noMonths')}</p>}
+        {loading && <p className="text-sm text-gray-400 dark:text-gray-500">{t('loading')}</p>}
+        {!loading && months.length === 0 && <p className="text-sm text-gray-500 dark:text-gray-400">{t('noMonths')}</p>}
 
         {months.length > 0 && (
-          <section className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
+          <section className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-x-auto">
             <table className="w-full text-sm border-collapse">
               <thead>
-                <tr className="bg-gray-50 text-gray-600 border-b border-gray-200">
+                <tr className="bg-gray-50 dark:bg-gray-800/60 text-gray-600 dark:text-gray-300 border-b border-gray-200 dark:border-gray-800">
                   <th className="p-3 text-left font-medium">{t('months')}</th>
                   <th className="p-3 text-left font-medium">{t('status')}</th>
                   <th className="p-3 text-right font-medium">{t('totalMeals')}</th>
@@ -67,19 +67,19 @@ export default function YearOverview() {
               </thead>
               <tbody>
                 {months.map((m) => (
-                  <tr key={m.id} className="border-b border-gray-100 last:border-0">
-                    <td className="p-3 font-medium text-gray-900"><Link to={`/admin/months/${m.id}`} className="hover:text-blue-700">{formatMonthId(m.id)}</Link></td>
-                    <td className="p-3 text-gray-500">{m.status === 'closed' ? t('closed') : m.status === 'backfill' ? t('backfill') : t('inProgress')}</td>
-                    <td className="p-3 text-right text-gray-700">{m.status === 'closed' ? formatCount(m.total_meals ?? 0, lang) : '—'}</td>
-                    <td className="p-3 text-right text-gray-700">{m.status === 'closed' ? formatTk(m.meal_rate ?? 0, lang) : '—'}</td>
-                    <td className="p-3 text-right text-gray-700">{m.status === 'closed' ? formatTk(m.total_bazar ?? 0, lang, 0) : '—'}</td>
-                    <td className="p-3 text-right text-gray-700">{m.grand ? formatTk(m.grand.charges, lang, 0) : '—'}</td>
-                    <td className="p-3 text-right text-gray-700">{m.grand ? formatTk(m.grand.net_payable, lang, 0) : '—'}</td>
+                  <tr key={m.id} className="border-b border-gray-100 dark:border-gray-800 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-800/40">
+                    <td className="p-3 font-medium text-gray-900 dark:text-white"><Link to={`/admin/months/${m.id}`} className="hover:text-blue-700 dark:hover:text-blue-400">{formatMonthId(m.id)}</Link></td>
+                    <td className="p-3 text-gray-500 dark:text-gray-400">{m.status === 'closed' ? t('closed') : m.status === 'backfill' ? t('backfill') : t('inProgress')}</td>
+                    <td className="p-3 text-right text-gray-700 dark:text-gray-300">{m.status === 'closed' ? formatCount(m.total_meals ?? 0, lang) : '—'}</td>
+                    <td className="p-3 text-right text-gray-700 dark:text-gray-300">{m.status === 'closed' ? formatTk(m.meal_rate ?? 0, lang) : '—'}</td>
+                    <td className="p-3 text-right text-gray-700 dark:text-gray-300">{m.status === 'closed' ? formatTk(m.total_bazar ?? 0, lang, 0) : '—'}</td>
+                    <td className="p-3 text-right text-gray-700 dark:text-gray-300">{m.grand ? formatTk(m.grand.charges, lang, 0) : '—'}</td>
+                    <td className="p-3 text-right text-gray-700 dark:text-gray-300">{m.grand ? formatTk(m.grand.net_payable, lang, 0) : '—'}</td>
                   </tr>
                 ))}
               </tbody>
               <tfoot>
-                <tr className="bg-gray-50 border-t-2 border-gray-300 font-semibold text-gray-900">
+                <tr className="bg-gray-50 dark:bg-gray-800/60 border-t-2 border-gray-300 dark:border-gray-700 font-semibold text-gray-900 dark:text-white">
                   <td className="p-3" colSpan={2}>{t('totals')} ({closed.length} {t('closed')})</td>
                   <td className="p-3 text-right">{formatCount(sum((m) => m.total_meals ?? 0), lang)}</td>
                   <td className="p-3 text-right">—</td>
@@ -93,11 +93,11 @@ export default function YearOverview() {
         )}
 
         {members.length > 0 && (
-          <section className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
-            <h2 className="text-sm font-semibold text-gray-700 px-4 pt-4">{t('memberTotals')}</h2>
+          <section className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-x-auto">
+            <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 px-4 pt-4">{t('memberTotals')}</h2>
             <table className="w-full text-sm border-collapse mt-2">
               <thead>
-                <tr className="bg-gray-50 text-gray-600 border-b border-gray-200">
+                <tr className="bg-gray-50 dark:bg-gray-800/60 text-gray-600 dark:text-gray-300 border-b border-gray-200 dark:border-gray-800">
                   <th className="p-3 text-left font-medium">{t('name')}</th>
                   <th className="p-3 text-right font-medium">{t('months')}</th>
                   <th className="p-3 text-right font-medium">{t('meals')}</th>
@@ -109,19 +109,19 @@ export default function YearOverview() {
               </thead>
               <tbody>
                 {members.map((m) => (
-                  <tr key={m.uid} className="border-b border-gray-100 last:border-0">
-                    <td className="p-3 font-medium text-gray-900">{nameOf(m.uid, m.name)}</td>
-                    <td className="p-3 text-right text-gray-700">{m.months}</td>
-                    <td className="p-3 text-right text-gray-700">{formatCount(m.meal_count, lang)}</td>
-                    <td className="p-3 text-right text-gray-700">{formatTk(m.meal_cost, lang, 0)}</td>
-                    <td className="p-3 text-right text-gray-700">{formatTk(m.total_charges, lang, 0)}</td>
-                    <td className="p-3 text-right text-gray-700">{formatTk(m.credits, lang, 0)}</td>
-                    <td className={`p-3 text-right font-semibold ${m.net_payable > 0 ? 'text-red-700' : 'text-green-700'}`}>{formatTk(m.net_payable, lang, 0)}</td>
+                  <tr key={m.uid} className="border-b border-gray-100 dark:border-gray-800 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-800/40">
+                    <td className="p-3 font-medium text-gray-900 dark:text-white">{nameOf(m.uid, m.name)}</td>
+                    <td className="p-3 text-right text-gray-700 dark:text-gray-300">{m.months}</td>
+                    <td className="p-3 text-right text-gray-700 dark:text-gray-300">{formatCount(m.meal_count, lang)}</td>
+                    <td className="p-3 text-right text-gray-700 dark:text-gray-300">{formatTk(m.meal_cost, lang, 0)}</td>
+                    <td className="p-3 text-right text-gray-700 dark:text-gray-300">{formatTk(m.total_charges, lang, 0)}</td>
+                    <td className="p-3 text-right text-gray-700 dark:text-gray-300">{formatTk(m.credits, lang, 0)}</td>
+                    <td className={`p-3 text-right font-semibold ${m.net_payable > 0 ? 'text-red-700 dark:text-red-400' : 'text-green-700 dark:text-green-400'}`}>{formatTk(m.net_payable, lang, 0)}</td>
                   </tr>
                 ))}
               </tbody>
               <tfoot>
-                <tr className="bg-gray-50 border-t-2 border-gray-300 font-semibold text-gray-900">
+                <tr className="bg-gray-50 dark:bg-gray-800/60 border-t-2 border-gray-300 dark:border-gray-700 font-semibold text-gray-900 dark:text-white">
                   <td className="p-3">{t('totals')}</td>
                   <td className="p-3"></td>
                   <td className="p-3 text-right">{formatCount(members.reduce((s, m) => s + m.meal_count, 0), lang)}</td>

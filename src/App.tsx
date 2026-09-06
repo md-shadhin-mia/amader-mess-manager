@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import type { ReactNode } from 'react';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { ToastProvider } from './contexts/ToastContext';
@@ -17,7 +18,7 @@ import MonthLedger from './pages/MonthLedger';
 import YearOverview from './pages/YearOverview';
 
 function Spinner() {
-  return <div className="h-screen w-full flex items-center justify-center">Loading...</div>;
+  return <div className="h-screen w-full flex items-center justify-center bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-200">Loading...</div>;
 }
 
 function ProfileLoadError({ message }: { message: string }) {
@@ -87,16 +88,18 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <LanguageProvider>
-      <ToastProvider>
-        <AuthProvider>
-          <MessProvider>
-            <Router>
-              <AppRoutes />
-            </Router>
-          </MessProvider>
-        </AuthProvider>
-      </ToastProvider>
-    </LanguageProvider>
+    <ThemeProvider>
+      <LanguageProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <MessProvider>
+              <Router>
+                <AppRoutes />
+              </Router>
+            </MessProvider>
+          </AuthProvider>
+        </ToastProvider>
+      </LanguageProvider>
+    </ThemeProvider>
   );
 }

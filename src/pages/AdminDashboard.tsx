@@ -6,6 +6,7 @@ import { auth, db } from '../firebase';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useToast } from '../contexts/ToastContext';
 import { useMess } from '../contexts/MessContext';
+import ThemeToggle from '../components/ThemeToggle';
 import { useCostCategories } from '../hooks/useCostCategories';
 import { useMealTypes } from '../hooks/useMealTypes';
 import { useActiveMonth, useMonths } from '../hooks/useMonths';
@@ -189,16 +190,16 @@ export default function AdminDashboard() {
   const totalRoomRent = users.reduce((sum, member) => sum + memberRent(member), 0);
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-12">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-12 transition-colors">
       {showProfile && <ProfileModal onClose={() => setShowProfile(false)} />}
       {showClose && activeMonth && userProfile && (
         <CloseMonthDialog month={activeMonth} users={allMembers} categories={categories} mealTypes={mealTypes} entries={entries} closedBy={userProfile.uid} onClose={() => setShowClose(false)} />
       )}
 
-      <header className="bg-blue-900 border-b border-blue-950 px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 sticky top-0 z-10 text-white">
+      <header className="bg-blue-900 dark:bg-gray-900 border-b border-blue-950 dark:border-gray-800 px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 sticky top-0 z-10 text-white transition-colors">
         <div>
           <h1 className="text-xl font-semibold">{mess?.name ?? t('adminPanel')}</h1>
-          <p className="text-blue-200 text-sm">
+          <p className="text-blue-200 dark:text-gray-400 text-sm">
             {t('manager')}: {userProfile?.name} {userProfile?.phone && `(${userProfile.phone})`}
             {' · '}
             <Link to="/messes" className="underline hover:text-white">{t('switchMess')}</Link>
@@ -206,29 +207,30 @@ export default function AdminDashboard() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <Link to="/admin/months" className="text-sm font-medium bg-blue-800 px-4 py-2 rounded hover:bg-blue-700 transition-colors">{t('monthReports')}</Link>
-          <Link to="/admin/reports" className="text-sm font-medium bg-blue-800 px-4 py-2 rounded hover:bg-blue-700 transition-colors">{t('yearOverview')}</Link>
-          <button onClick={() => navigate('/member/entry')} className="text-sm font-medium bg-blue-800 px-4 py-2 rounded hover:bg-blue-700 transition-colors">{t('myMealEntry')}</button>
-          <button onClick={() => setShowProfile(true)} className="text-sm font-medium text-blue-200 hover:text-white">{t('editProfile')}</button>
-          <div className="bg-blue-950 rounded-lg p-1 flex">
-            <button onClick={() => setLang('bn')} className={`px-3 py-1 text-sm font-medium rounded-md ${lang === 'bn' ? 'bg-blue-800 text-white' : 'text-blue-300'}`}>বাংলা</button>
-            <button onClick={() => setLang('en')} className={`px-3 py-1 text-sm font-medium rounded-md ${lang === 'en' ? 'bg-blue-800 text-white' : 'text-blue-300'}`}>EN</button>
+          <Link to="/admin/months" className="text-sm font-medium bg-blue-800 dark:bg-gray-800 px-4 py-2 rounded hover:bg-blue-700 dark:hover:bg-gray-700 transition-colors">{t('monthReports')}</Link>
+          <Link to="/admin/reports" className="text-sm font-medium bg-blue-800 dark:bg-gray-800 px-4 py-2 rounded hover:bg-blue-700 dark:hover:bg-gray-700 transition-colors">{t('yearOverview')}</Link>
+          <button onClick={() => navigate('/member/entry')} className="text-sm font-medium bg-blue-800 dark:bg-gray-800 px-4 py-2 rounded hover:bg-blue-700 dark:hover:bg-gray-700 transition-colors">{t('myMealEntry')}</button>
+          <button onClick={() => setShowProfile(true)} className="text-sm font-medium text-blue-200 dark:text-gray-300 hover:text-white">{t('editProfile')}</button>
+          <ThemeToggle className="text-blue-200 dark:text-gray-300 hover:text-white hover:bg-blue-800 dark:hover:bg-gray-800" />
+          <div className="bg-blue-950 dark:bg-gray-800 rounded-lg p-1 flex">
+            <button onClick={() => setLang('bn')} className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${lang === 'bn' ? 'bg-blue-800 dark:bg-gray-700 text-white' : 'text-blue-300 dark:text-gray-400'}`}>বাংলা</button>
+            <button onClick={() => setLang('en')} className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${lang === 'en' ? 'bg-blue-800 dark:bg-gray-700 text-white' : 'text-blue-300 dark:text-gray-400'}`}>EN</button>
           </div>
-          <button onClick={() => auth.signOut()} className="text-sm font-medium bg-blue-800 px-4 py-2 rounded hover:bg-blue-700 transition-colors">{t('signOut')}</button>
+          <button onClick={() => auth.signOut()} className="text-sm font-medium bg-blue-800 dark:bg-gray-800 px-4 py-2 rounded hover:bg-blue-700 dark:hover:bg-gray-700 transition-colors">{t('signOut')}</button>
         </div>
       </header>
 
       <main className="max-w-5xl mx-auto p-6 space-y-6">
         {/* Month management */}
-        <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <section className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors">
           <div>
-            <h2 className="text-lg font-medium text-gray-900 mb-1">{t('currentMonthStatus')}</h2>
-            <p className="text-gray-500 text-sm">{activeMonth ? `${t('active')}: ${activeMonth.month_id}` : t('noActiveMonth')}</p>
+            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">{t('currentMonthStatus')}</h2>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">{activeMonth ? `${t('active')}: ${activeMonth.month_id}` : t('noActiveMonth')}</p>
             {activeMonth && (
               <span className="text-sm font-medium">
-                <Link to={`/admin/months/${activeMonth.id}/edit`} className="text-blue-600 hover:text-blue-800">{t('editEntries')}</Link>
+                <Link to={`/admin/months/${activeMonth.id}/edit`} className="text-blue-600 dark:text-blue-400 hover:underline">{t('editEntries')}</Link>
                 {' · '}
-                <Link to={`/admin/months/${activeMonth.id}`} className="text-blue-600 hover:text-blue-800">{t('viewReport')} →</Link>
+                <Link to={`/admin/months/${activeMonth.id}`} className="text-blue-600 dark:text-blue-400 hover:underline">{t('viewReport')} →</Link>
               </span>
             )}
           </div>
@@ -237,7 +239,7 @@ export default function AdminDashboard() {
               <>
                 <button onClick={startNewMonth} className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 whitespace-nowrap">{t('startNewMonth')}</button>
                 {lastClosedMonth && (
-                  <button onClick={reopen} className="text-sm font-medium text-gray-600 border border-gray-200 px-4 py-2 rounded-lg hover:bg-gray-50 whitespace-nowrap">{t('reopenMonth')} ({lastClosedMonth.month_id})</button>
+                  <button onClick={reopen} className="text-sm font-medium text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 whitespace-nowrap">{t('reopenMonth')} ({lastClosedMonth.month_id})</button>
                 )}
               </>
             ) : (
@@ -249,45 +251,45 @@ export default function AdminDashboard() {
         {activeMonth ? (
           <MonthCostsForm month={activeMonth} categories={activeCategories} users={users} />
         ) : (
-          <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 text-sm text-gray-500">{t('startMonthToEnterCosts')}</section>
+          <section className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400">{t('startMonthToEnterCosts')}</section>
         )}
 
         {userProfile && <PaymentsInbox users={users} managerUid={userProfile.uid} monthPayments={entries.payments} />}
 
         {/* Mess settings: name, timezone, join code, seats */}
         {mess && (
-          <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <section className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
             <div className="flex flex-wrap justify-between items-start gap-3 mb-4">
               <div>
-                <h2 className="text-lg font-medium text-gray-900">{t('messSettings')}</h2>
-                <p className="text-sm text-gray-500">{t('messSettingsHint')}</p>
+                <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">{t('messSettings')}</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{t('messSettingsHint')}</p>
               </div>
               <div className="flex items-center gap-2 text-sm">
-                <span className={`px-2 py-1 rounded text-xs font-medium ${mess.plan === 'pro' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700'}`}>{mess.plan === 'pro' ? t('planPro') : t('planFree')}</span>
-                <span className="text-gray-600">{t('seats')}: <strong className="text-gray-900">{mess.member_count} / {mess.member_limit}</strong></span>
+                <span className={`px-2 py-1 rounded text-xs font-medium ${mess.plan === 'pro' ? 'bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}>{mess.plan === 'pro' ? t('planPro') : t('planFree')}</span>
+                <span className="text-gray-600 dark:text-gray-400">{t('seats')}: <strong className="text-gray-900 dark:text-gray-100">{mess.member_count} / {mess.member_limit}</strong></span>
               </div>
             </div>
             <div className="grid md:grid-cols-2 gap-6">
               <form onSubmit={saveMess} className="space-y-3">
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">{t('messName')}</label>
-                  <input value={messName ?? mess.name} onChange={(e) => setMessName(e.target.value)} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm" required maxLength={60} />
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">{t('messName')}</label>
+                  <input value={messName ?? mess.name} onChange={(e) => setMessName(e.target.value)} className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 rounded-lg text-sm" required maxLength={60} />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">{t('timezone')}</label>
-                  <input value={messTz ?? mess.timezone} onChange={(e) => setMessTz(e.target.value)} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm" />
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">{t('timezone')}</label>
+                  <input value={messTz ?? mess.timezone} onChange={(e) => setMessTz(e.target.value)} className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 rounded-lg text-sm" />
                 </div>
                 {(messName !== null && messName !== mess.name) || (messTz !== null && messTz !== mess.timezone) ? (
                   <button type="submit" disabled={busy === 'mess'} className="text-sm font-medium bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50">{t('saveMess')}</button>
                 ) : null}
               </form>
-              <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
-                <p className="text-xs text-blue-900 mb-1">{t('joinCode')}</p>
-                <p className="font-mono text-2xl tracking-widest text-blue-900 mb-2">{mess.join_code}</p>
-                <p className="text-xs text-blue-800 mb-3">{t('joinCodeHint')}</p>
+              <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/60 rounded-lg p-4">
+                <p className="text-xs text-blue-900 dark:text-blue-300 mb-1">{t('joinCode')}</p>
+                <p className="font-mono text-2xl tracking-widest text-blue-900 dark:text-blue-200 mb-2">{mess.join_code}</p>
+                <p className="text-xs text-blue-800 dark:text-blue-300/80 mb-3">{t('joinCodeHint')}</p>
                 <div className="flex gap-2">
                   <button onClick={copyCode} className="text-sm font-medium bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">{t('copyCode')}</button>
-                  <button onClick={rotate} disabled={busy === 'rotate'} className="text-sm font-medium text-blue-700 border border-blue-200 px-4 py-2 rounded-lg hover:bg-blue-100 disabled:opacity-50">{t('rotateCode')}</button>
+                  <button onClick={rotate} disabled={busy === 'rotate'} className="text-sm font-medium text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 px-4 py-2 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 disabled:opacity-50">{t('rotateCode')}</button>
                 </div>
               </div>
             </div>
@@ -296,12 +298,12 @@ export default function AdminDashboard() {
 
         {/* Settings: categories and meal types */}
         <section>
-          <button onClick={() => setShowSettings((v) => !v)} className="w-full flex justify-between items-center bg-white px-6 py-4 rounded-xl shadow-sm border border-gray-100 text-left">
+          <button onClick={() => setShowSettings((v) => !v)} className="w-full flex justify-between items-center bg-white dark:bg-gray-800 px-6 py-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 text-left transition-colors">
             <span>
-              <span className="text-lg font-medium text-gray-900">{t('settings')}</span>
-              <span className="block text-sm text-gray-500">{t('settingsHint')}</span>
+              <span className="text-lg font-medium text-gray-900 dark:text-gray-100">{t('settings')}</span>
+              <span className="block text-sm text-gray-500 dark:text-gray-400">{t('settingsHint')}</span>
             </span>
-            <span className="text-gray-400">{showSettings ? '▲' : '▼'}</span>
+            <span className="text-gray-400 dark:text-gray-500">{showSettings ? '▲' : '▼'}</span>
           </button>
           {showSettings && (
             <div className="space-y-6 mt-6">
@@ -314,16 +316,16 @@ export default function AdminDashboard() {
         <NotificationSettings />
 
         {/* Member directory */}
-        <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <section className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
           <div className="flex justify-between items-center mb-1">
-            <h2 className="text-lg font-medium text-gray-900">{t('memberDirectory')}</h2>
-            <span className="text-sm text-gray-500">{t('totalRoomRent')}: <strong className="text-gray-900">{formatTk(totalRoomRent, lang, 0)}</strong></span>
+            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">{t('memberDirectory')}</h2>
+            <span className="text-sm text-gray-500 dark:text-gray-400">{t('totalRoomRent')}: <strong className="text-gray-900 dark:text-gray-100">{formatTk(totalRoomRent, lang, 0)}</strong></span>
           </div>
-          <p className="text-sm text-gray-500 mb-4">{t('rentColumnHint')}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{t('rentColumnHint')}</p>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-gray-50 text-gray-600 text-sm border-b border-gray-200">
+                <tr className="bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300 text-sm border-b border-gray-200 dark:border-gray-700">
                   <th className="p-4 font-medium">{t('name')}</th>
                   <th className="p-4 font-medium">{t('phone')}</th>
                   <th className="p-4 font-medium">{t('role')}</th>
@@ -334,14 +336,14 @@ export default function AdminDashboard() {
               </thead>
               <tbody>
                 {users.map((u) => (
-                  <tr key={u.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
+                  <tr key={u.id} className="border-b border-gray-100 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                     <td className="p-4">
-                      <div className="text-gray-900 font-medium">{u.name}</div>
-                      <div className="text-xs text-gray-400">{u.email}</div>
+                      <div className="text-gray-900 dark:text-gray-100 font-medium">{u.name}</div>
+                      <div className="text-xs text-gray-400 dark:text-gray-500">{u.email}</div>
                     </td>
-                    <td className="p-4 text-gray-500">{u.phone || '-'}</td>
+                    <td className="p-4 text-gray-500 dark:text-gray-400">{u.phone || '-'}</td>
                     <td className="p-4">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${u.role === 'manager' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'}`}>
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${u.role === 'manager' ? 'bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}>
                         {u.role === 'manager' ? t('manager') : t('member')}
                       </span>
                     </td>
@@ -352,9 +354,9 @@ export default function AdminDashboard() {
                           aria-label={`${t('roomRent')}: ${u.name}`}
                           value={rentInputValue(u)}
                           onChange={(e) => setRentDrafts({ ...rentDrafts, [u.id]: e.target.value })}
-                          className="w-24 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                          className="w-24 px-3 py-1.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                         />
-                        <span className="text-gray-500 text-sm">৳</span>
+                        <span className="text-gray-500 dark:text-gray-400 text-sm">৳</span>
                         {hasRentChange(u) && (
                           <button type="submit" disabled={savingRentFor === u.id} className="text-xs font-medium bg-green-600 text-white px-3 py-1.5 rounded-lg hover:bg-green-700 disabled:opacity-50 whitespace-nowrap">
                             {savingRentFor === u.id ? t('loading') : t('saveRent')}
@@ -362,18 +364,18 @@ export default function AdminDashboard() {
                         )}
                       </form>
                     </td>
-                    <td className="p-4 text-gray-700 font-medium">{formatTk(Number(u.advance_balance) || 0, lang, 0)}</td>
+                    <td className="p-4 text-gray-700 dark:text-gray-300 font-medium">{formatTk(Number(u.advance_balance) || 0, lang, 0)}</td>
                     <td className="p-4 whitespace-nowrap">
                       {u.id === ownerUid ? (
-                        <span className="text-xs text-gray-400">{t('primaryAdmin')}</span>
+                        <span className="text-xs text-gray-400 dark:text-gray-500">{t('primaryAdmin')}</span>
                       ) : (
                         <>
                           {u.role !== 'manager' ? (
-                            <button onClick={() => makeAdmin(u)} className="text-sm font-medium text-blue-600 hover:text-blue-800 mr-3">{t('makeAdmin')}</button>
+                            <button onClick={() => makeAdmin(u)} className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline mr-3">{t('makeAdmin')}</button>
                           ) : (
-                            <button onClick={() => removeAdmin(u)} className="text-sm font-medium text-red-600 hover:text-red-800 mr-3">{t('removeAdmin')}</button>
+                            <button onClick={() => removeAdmin(u)} className="text-sm font-medium text-red-600 dark:text-red-400 hover:underline mr-3">{t('removeAdmin')}</button>
                           )}
-                          <button onClick={() => kick(u)} className="text-sm font-medium text-gray-500 hover:text-red-700">{t('removeMember')}</button>
+                          <button onClick={() => kick(u)} className="text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-red-700 dark:hover:text-red-400">{t('removeMember')}</button>
                         </>
                       )}
                     </td>
@@ -382,7 +384,7 @@ export default function AdminDashboard() {
               </tbody>
             </table>
             {allMembers.some((m) => m.status === 'left') && (
-              <p className="text-xs text-gray-400 mt-3">
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-3">
                 {t('leftMembers')}: {allMembers.filter((m) => m.status === 'left').map((m) => m.name).join(', ')}
               </p>
             )}

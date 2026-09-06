@@ -130,21 +130,21 @@ export default function MealsGrid({ messId, monthId, members, mealTypes, meals, 
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-3">
-        <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden">
+        <div className="inline-flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
           {mealTypes.map((type) => (
-            <button key={type.id} onClick={() => setTypeId(type.id)} className={`px-3 py-1.5 text-sm font-medium ${typeId === type.id ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>
+            <button key={type.id} onClick={() => setTypeId(type.id)} className={`px-3 py-1.5 text-sm font-medium transition-colors ${typeId === type.id ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
               {labelOf(type, lang)}
             </button>
           ))}
-          <button onClick={() => setTypeId(TOTAL)} className={`px-3 py-1.5 text-sm font-medium ${typeId === TOTAL ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>
+          <button onClick={() => setTypeId(TOTAL)} className={`px-3 py-1.5 text-sm font-medium transition-colors ${typeId === TOTAL ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
             {t('weightedTotal')}
           </button>
         </div>
-        <p className="text-xs text-gray-500 flex-1">{t('pasteHint')}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 flex-1">{t('pasteHint')}</p>
         {dirtyCount > 0 && (
           <div className="flex items-center gap-2">
-            <span className="text-xs text-amber-700">{t('unsavedChanges')}: {dirtyCount}</span>
-            <button onClick={() => setDrafts({})} className="text-sm font-medium text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg">{t('cancel')}</button>
+            <span className="text-xs text-amber-700 dark:text-amber-400">{t('unsavedChanges')}: {dirtyCount}</span>
+            <button onClick={() => setDrafts({})} className="text-sm font-medium text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">{t('cancel')}</button>
             <button onClick={save} disabled={disabled || saving !== null} className="text-sm font-medium bg-green-600 text-white px-4 py-1.5 rounded-lg hover:bg-green-700 disabled:opacity-50">
               {saving ? `${t('loading')} ${saving}` : t('saveChanges')}
             </button>
@@ -152,11 +152,11 @@ export default function MealsGrid({ messId, monthId, members, mealTypes, meals, 
         )}
       </div>
 
-      <div className="overflow-x-auto border border-gray-100 rounded-lg">
+      <div className="overflow-x-auto border border-gray-100 dark:border-gray-800 rounded-lg">
         <table className="text-xs border-collapse">
           <thead>
-            <tr className="bg-gray-50 text-gray-600">
-              <th className="p-2 text-left font-medium sticky left-0 bg-gray-50 z-10 min-w-[8rem]">{t('name')}</th>
+            <tr className="bg-gray-50 dark:bg-gray-800/60 text-gray-600 dark:text-gray-300">
+              <th className="p-2 text-left font-medium sticky left-0 bg-gray-50 dark:bg-gray-800 z-10 min-w-[8rem]">{t('name')}</th>
               {days.map((date) => (
                 <th key={date} className="p-1 font-medium text-center w-10">{Number(date.slice(-2))}</th>
               ))}
@@ -166,19 +166,19 @@ export default function MealsGrid({ messId, monthId, members, mealTypes, meals, 
           </thead>
           <tbody>
             {members.map((m, r) => (
-              <tr key={m.uid} className="border-t border-gray-100">
-                <td className="p-2 text-gray-900 font-medium whitespace-nowrap sticky left-0 bg-white z-10">
+              <tr key={m.uid} className="border-t border-gray-100 dark:border-gray-800">
+                <td className="p-2 text-gray-900 dark:text-white font-medium whitespace-nowrap sticky left-0 bg-white dark:bg-gray-900 z-10">
                   {m.name}
-                  {m.status === 'left' && <span className="ml-1 text-gray-400">({t('leftTag')})</span>}
+                  {m.status === 'left' && <span className="ml-1 text-gray-400 dark:text-gray-500">({t('leftTag')})</span>}
                 </td>
                 {days.map((date, c) => {
                   const key = mealDocId(m.uid, date);
                   const value = typeId === TOTAL ? mealCountOf(cell(m.uid, date), mealTypes) : cell(m.uid, date)[typeId] || 0;
                   const dirty = key in drafts;
                   return (
-                    <td key={date} className={`p-0 border-l border-gray-50 ${dirty ? 'bg-amber-50' : ''}`}>
+                    <td key={date} className={`p-0 border-l border-gray-50 dark:border-gray-800 ${dirty ? 'bg-amber-50 dark:bg-amber-950/40' : ''}`}>
                       {typeId === TOTAL ? (
-                        <div className="w-10 h-8 flex items-center justify-center text-gray-700">{value ? formatCount(value, lang) : ''}</div>
+                        <div className="w-10 h-8 flex items-center justify-center text-gray-700 dark:text-gray-300">{value ? formatCount(value, lang) : ''}</div>
                       ) : (
                         <input
                           ref={(el) => { inputs.current[`${r}-${c}`] = el; }}
@@ -189,27 +189,27 @@ export default function MealsGrid({ messId, monthId, members, mealTypes, meals, 
                           onPaste={(e) => onPaste(r, c, e)}
                           onKeyDown={(e) => onKey(r, c, e)}
                           onFocus={(e) => e.currentTarget.select()}
-                          className="w-10 h-8 text-center bg-transparent focus:outline-none focus:bg-blue-50"
+                          className="w-10 h-8 text-center bg-transparent text-gray-900 dark:text-gray-100 focus:outline-none focus:bg-blue-50 dark:focus:bg-blue-950/50"
                         />
                       )}
                     </td>
                   );
                 })}
-                <td className="p-2 text-right font-semibold text-gray-900">{formatCount(rowTotal(m.uid), lang)}</td>
+                <td className="p-2 text-right font-semibold text-gray-900 dark:text-white">{formatCount(rowTotal(m.uid), lang)}</td>
                 <td className="p-1">
                   {typeId !== TOTAL && !disabled && (
-                    <button onClick={() => fillRow(m.uid)} className="text-blue-600 hover:text-blue-800 whitespace-nowrap px-1">{t('fillRow')}</button>
+                    <button onClick={() => fillRow(m.uid)} className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 whitespace-nowrap px-1">{t('fillRow')}</button>
                   )}
                 </td>
               </tr>
             ))}
             {members.length === 0 && (
-              <tr><td colSpan={days.length + 3} className="p-4 text-center text-gray-400">{t('noRows')}</td></tr>
+              <tr><td colSpan={days.length + 3} className="p-4 text-center text-gray-400 dark:text-gray-500">{t('noRows')}</td></tr>
             )}
           </tbody>
           <tfoot>
-            <tr className="bg-gray-50 border-t-2 border-gray-200 font-semibold text-gray-900">
-              <td className="p-2 sticky left-0 bg-gray-50 z-10">{t('dayTotal')}</td>
+            <tr className="bg-gray-50 dark:bg-gray-800/60 border-t-2 border-gray-200 dark:border-gray-700 font-semibold text-gray-900 dark:text-white">
+              <td className="p-2 sticky left-0 bg-gray-50 dark:bg-gray-800 z-10">{t('dayTotal')}</td>
               {days.map((date) => <td key={date} className="p-1 text-center">{colTotal(date) ? formatCount(colTotal(date), lang) : ''}</td>)}
               <td className="p-2 text-right">{formatCount(members.reduce((s, m) => s + rowTotal(m.uid), 0), lang)}</td>
               <td></td>

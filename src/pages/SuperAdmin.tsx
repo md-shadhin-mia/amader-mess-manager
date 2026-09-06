@@ -115,13 +115,13 @@ export default function SuperAdmin() {
     }
   };
 
-  const inputClass = 'px-2 py-1 bg-gray-50 border border-gray-200 rounded text-sm w-20';
+  const inputClass = 'px-2 py-1 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 rounded text-sm w-20';
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-12">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-12 transition-colors">
       <PageHeader title={t('superAdmin')} subtitle={t('superAdminHint')} backTo="/messes" />
-      <main className="max-w-6xl mx-auto p-6">
-        <section className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
+      <main className="max-w-6xl mx-auto p-6 space-y-6">
+        <section className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-x-auto transition-colors">
           {loading ? (
             <p className="p-6 text-sm text-gray-400">{t('loading')}</p>
           ) : messes.length === 0 ? (
@@ -129,7 +129,7 @@ export default function SuperAdmin() {
           ) : (
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-gray-50 text-gray-600 border-b border-gray-200">
+                <tr className="bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700">
                   <th className="p-3 text-left font-medium">{t('messName')}</th>
                   <th className="p-3 text-left font-medium">{t('owner')}</th>
                   <th className="p-3 text-left font-medium">{t('plan')}</th>
@@ -142,34 +142,34 @@ export default function SuperAdmin() {
               </thead>
               <tbody>
                 {messes.map((m) => (
-                  <tr key={m.id} className="border-b border-gray-100 last:border-0">
+                  <tr key={m.id} className="border-b border-gray-100 dark:border-gray-700 last:border-0 hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors">
                     <td className="p-3">
-                      <div className="font-medium text-gray-900">{m.name}</div>
-                      <div className="text-xs text-gray-400 font-mono">{m.id}</div>
+                      <div className="font-medium text-gray-900 dark:text-gray-100">{m.name}</div>
+                      <div className="text-xs text-gray-400 dark:text-gray-500 font-mono">{m.id}</div>
                     </td>
-                    <td className="p-3 text-xs text-gray-500 font-mono">{m.owner_uid}</td>
+                    <td className="p-3 text-xs text-gray-500 dark:text-gray-400 font-mono">{m.owner_uid}</td>
                     <td className="p-3">
-                      <select value={m.plan} onChange={(e) => setPlan(m, e.target.value as MessPlan)} disabled={busy === m.id} className="px-2 py-1 bg-gray-50 border border-gray-200 rounded text-sm">
+                      <select value={m.plan} onChange={(e) => setPlan(m, e.target.value as MessPlan)} disabled={busy === m.id} className="px-2 py-1 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 rounded text-sm">
                         <option value="free">free</option>
                         <option value="pro">pro</option>
                       </select>
                     </td>
                     <td className="p-3">
-                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${m.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{m.status}</span>
+                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${m.status === 'active' ? 'bg-green-100 dark:bg-green-950/60 text-green-700 dark:text-green-300' : 'bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300'}`}>{m.status}</span>
                     </td>
                     <td className="p-3">
                       <div className="flex items-center gap-1">
-                        <span className="text-gray-900">{m.member_count} /</span>
+                        <span className="text-gray-900 dark:text-gray-100">{m.member_count} /</span>
                         <input className={inputClass} value={limits[m.id] ?? String(m.member_limit)} onChange={(e) => setLimits({ ...limits, [m.id]: e.target.value })} />
                         {limits[m.id] !== undefined && Number(limits[m.id]) !== m.member_limit && (
-                          <button onClick={() => saveLimit(m)} className="text-xs font-medium text-blue-600">{t('save')}</button>
+                          <button onClick={() => saveLimit(m)} className="text-xs font-medium text-blue-600 dark:text-blue-400">{t('save')}</button>
                         )}
                       </div>
                     </td>
-                    <td className="p-3 text-gray-500">{m.timezone}</td>
-                    <td className="p-3 font-mono text-xs text-gray-500">{m.join_code}</td>
+                    <td className="p-3 text-gray-500 dark:text-gray-400">{m.timezone}</td>
+                    <td className="p-3 font-mono text-xs text-gray-500 dark:text-gray-400">{m.join_code}</td>
                     <td className="p-3 text-right">
-                      <button onClick={() => toggleStatus(m)} disabled={busy === m.id} className={`text-xs font-medium px-3 py-1.5 rounded-lg border ${m.status === 'active' ? 'text-red-600 border-red-200 hover:bg-red-50' : 'text-green-700 border-green-200 hover:bg-green-50'}`}>
+                      <button onClick={() => toggleStatus(m)} disabled={busy === m.id} className={`text-xs font-medium px-3 py-1.5 rounded-lg border ${m.status === 'active' ? 'text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-950/40' : 'text-green-700 dark:text-green-400 border-green-200 dark:border-green-800 hover:bg-green-50 dark:hover:bg-green-950/40'}`}>
                         {m.status === 'active' ? t('suspend') : t('reactivate')}
                       </button>
                     </td>
@@ -181,21 +181,21 @@ export default function SuperAdmin() {
         </section>
 
         {/* Administrators Section */}
-        <section className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+        <section className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors">
+          <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
             <div>
-              <h2 className="text-base font-semibold text-gray-900">{t('administrators')}</h2>
-              <p className="text-xs text-gray-500">{t('administratorsHint')}</p>
+              <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">{t('administrators')}</h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{t('administratorsHint')}</p>
             </div>
           </div>
 
           {adminsLoading ? (
-            <p className="p-6 text-sm text-gray-400">{t('loading')}</p>
+            <p className="p-6 text-sm text-gray-400 dark:text-gray-500">{t('loading')}</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-gray-50 text-gray-600 border-b border-gray-200">
+                  <tr className="bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700">
                     <th className="p-3 text-left font-medium">{t('adminUid')}</th>
                     <th className="p-3 text-left font-medium">{t('adminEmail')}</th>
                     <th className="p-3 text-left font-medium">{t('status')}</th>
@@ -204,13 +204,13 @@ export default function SuperAdmin() {
                 </thead>
                 <tbody>
                   {admins.map((a) => (
-                    <tr key={a.uid} className="border-b border-gray-100 last:border-0">
-                      <td className="p-3 font-mono text-xs text-gray-700">{a.uid}</td>
-                      <td className="p-3 text-gray-600">{a.email || '—'}</td>
+                    <tr key={a.uid} className="border-b border-gray-100 dark:border-gray-700 last:border-0 hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors">
+                      <td className="p-3 font-mono text-xs text-gray-700 dark:text-gray-300">{a.uid}</td>
+                      <td className="p-3 text-gray-600 dark:text-gray-300">{a.email || '—'}</td>
                       <td className="p-3">
                         <span
                           className={`px-2 py-0.5 rounded text-xs font-medium ${
-                            a.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                            a.status === 'active' ? 'bg-green-100 dark:bg-green-950/60 text-green-700 dark:text-green-300' : 'bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300'
                           }`}
                         >
                           {a.status === 'active' ? t('active') : t('inactive')}
@@ -222,8 +222,8 @@ export default function SuperAdmin() {
                           disabled={busy === `admin-${a.uid}`}
                           className={`text-xs font-medium px-3 py-1.5 rounded-lg border ${
                             a.status === 'active'
-                              ? 'text-red-600 border-red-200 hover:bg-red-50'
-                              : 'text-green-700 border-green-200 hover:bg-green-50'
+                              ? 'text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-950/40'
+                              : 'text-green-700 dark:text-green-400 border-green-200 dark:border-green-800 hover:bg-green-50 dark:hover:bg-green-950/40'
                           }`}
                         >
                           {a.status === 'active' ? t('deactivate') : t('activate')}
@@ -237,13 +237,13 @@ export default function SuperAdmin() {
           )}
 
           {/* Add Admin Form */}
-          <form onSubmit={handleAddAdmin} className="p-4 bg-gray-50 border-t border-gray-100 flex flex-wrap gap-3 items-center">
+          <form onSubmit={handleAddAdmin} className="p-4 bg-gray-50 dark:bg-gray-800/60 border-t border-gray-100 dark:border-gray-700 flex flex-wrap gap-3 items-center">
             <input
               type="text"
               placeholder={t('adminUid')}
               value={newAdminUid}
               onChange={(e) => setNewAdminUid(e.target.value)}
-              className="px-3 py-1.5 bg-white border border-gray-200 rounded text-sm min-w-[240px]"
+              className="px-3 py-1.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 rounded text-sm min-w-[240px]"
               required
             />
             <input
@@ -251,7 +251,7 @@ export default function SuperAdmin() {
               placeholder={t('adminEmail')}
               value={newAdminEmail}
               onChange={(e) => setNewAdminEmail(e.target.value)}
-              className="px-3 py-1.5 bg-white border border-gray-200 rounded text-sm min-w-[200px]"
+              className="px-3 py-1.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 rounded text-sm min-w-[200px]"
             />
             <button
               type="submit"
@@ -264,10 +264,10 @@ export default function SuperAdmin() {
         </section>
 
         {/* Legacy Data Migration Section */}
-        <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mt-6">
+        <section className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 transition-colors">
           <div className="mb-4">
-            <h2 className="text-base font-semibold text-gray-900">{t('migrateLegacy')}</h2>
-            <p className="text-xs text-gray-500">{t('migrateLegacyHint')}</p>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">{t('migrateLegacy')}</h2>
+            <p className="text-xs text-gray-500 dark:text-gray-400">{t('migrateLegacyHint')}</p>
           </div>
 
           <form onSubmit={handleMigrate} className="flex flex-wrap items-center gap-3">
@@ -276,7 +276,7 @@ export default function SuperAdmin() {
               placeholder={t('messNamePlaceholder')}
               value={migrationName}
               onChange={(e) => setMigrationName(e.target.value)}
-              className="px-3 py-2 bg-gray-50 border border-gray-200 rounded text-sm min-w-[240px]"
+              className="px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 rounded text-sm min-w-[240px]"
               required
             />
             <button
@@ -289,7 +289,7 @@ export default function SuperAdmin() {
           </form>
 
           {migrationProgress && (
-            <p className="mt-3 text-xs font-mono text-gray-600 bg-gray-50 p-2.5 rounded border border-gray-200">
+            <p className="mt-3 text-xs font-mono text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900/80 p-2.5 rounded border border-gray-200 dark:border-gray-700">
               {migrationProgress}
             </p>
           )}

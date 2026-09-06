@@ -60,7 +60,11 @@ export default function PaymentForm({ uid, date, disabled }: Props) {
             key={option}
             type="button"
             onClick={() => setPurpose(option)}
-            className={`h-11 rounded-lg text-sm font-medium border ${purpose === option ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-200'}`}
+            className={`h-11 rounded-lg text-sm font-medium border ${
+              purpose === option
+                ? 'bg-blue-600 text-white border-blue-600'
+                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-700'
+            }`}
           >
             {option === 'fund_deposit' ? t('purposeFund') : t('purposePrepaid')}
           </button>
@@ -71,12 +75,12 @@ export default function PaymentForm({ uid, date, disabled }: Props) {
         value={note}
         onChange={(e) => setNote(e.target.value)}
         placeholder={`${t('note')} (${t('optional')})`}
-        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+        className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20"
       />
       <button type="submit" disabled={disabled || saving} className="w-full h-12 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50">
         {saving ? t('loading') : t('submitPayment')}
       </button>
-      <p className="text-xs text-gray-400">{t('paymentPendingHint')}</p>
+      <p className="text-xs text-gray-400 dark:text-gray-500">{t('paymentPendingHint')}</p>
     </form>
   );
 }

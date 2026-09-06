@@ -55,10 +55,10 @@ export default function MonthReport() {
   const fmt = (col: Column, value: number) => (col.kind === 'count' ? formatCount(value, lang) : formatTk(value, lang, 0));
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-12 print:bg-white">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-12 print:bg-white">
       <PageHeader title={`${t('reportTitle')} · ${monthId ? formatMonthId(monthId) : ''}`} backTo="/admin">
-        <Link to="/admin/months" className="text-sm font-medium text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50">{t('months')}</Link>
-        <button onClick={exportCsv} disabled={rows.length === 0} className="text-sm font-medium text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 disabled:opacity-50">{t('downloadCsv')}</button>
+        <Link to="/admin/months" className="text-sm font-medium text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">{t('months')}</Link>
+        <button onClick={exportCsv} disabled={rows.length === 0} className="text-sm font-medium text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50">{t('downloadCsv')}</button>
         <button onClick={() => window.print()} className="text-sm font-medium bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700">{t('print')}</button>
       </PageHeader>
 
@@ -67,17 +67,17 @@ export default function MonthReport() {
           <h1 className="text-xl font-semibold">{t('appTitle')} · {t('reportTitle')} · {monthId ? formatMonthId(monthId) : ''}</h1>
         </div>
 
-        {loading && <p className="text-sm text-gray-400">{t('loading')}</p>}
-        {!loading && mode === 'missing' && <p className="text-sm text-gray-500">{t('noMonths')}</p>}
+        {loading && <p className="text-sm text-gray-400 dark:text-gray-500">{t('loading')}</p>}
+        {!loading && mode === 'missing' && <p className="text-sm text-gray-500 dark:text-gray-400">{t('noMonths')}</p>}
 
         {month && totals && (
           <>
             <div className="flex flex-wrap items-center gap-2 text-sm">
-              {mode === 'live' && month.status === 'backfill' && <span className="px-2 py-1 rounded bg-amber-100 text-amber-800 font-medium">{t('backfillBadge')}</span>}
-              {mode === 'live' && month.status !== 'backfill' && <span className="px-2 py-1 rounded bg-green-100 text-green-800 font-medium">{t('preview')}</span>}
-              {mode === 'live' && <Link to={`/admin/months/${month.id}/edit`} className="text-blue-600 hover:text-blue-800 font-medium print:hidden">{t('editEntries')} →</Link>}
-              {mode === 'closed' && <span className="px-2 py-1 rounded bg-gray-200 text-gray-800 font-medium">{t('closed')}</span>}
-              {mode === 'legacy' && <span className="px-2 py-1 rounded bg-amber-100 text-amber-800">{t('legacyMonthHint')}</span>}
+              {mode === 'live' && month.status === 'backfill' && <span className="px-2 py-1 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 font-medium">{t('backfillBadge')}</span>}
+              {mode === 'live' && month.status !== 'backfill' && <span className="px-2 py-1 rounded bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 font-medium">{t('preview')}</span>}
+              {mode === 'live' && <Link to={`/admin/months/${month.id}/edit`} className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium print:hidden">{t('editEntries')} →</Link>}
+              {mode === 'closed' && <span className="px-2 py-1 rounded bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200 font-medium">{t('closed')}</span>}
+              {mode === 'legacy' && <span className="px-2 py-1 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300">{t('legacyMonthHint')}</span>}
             </div>
 
             <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -91,15 +91,15 @@ export default function MonthReport() {
                 [t('grandCharges'), formatTk(totals.grand.charges, lang, 0)],
                 [t('grandNet'), formatTk(totals.grand.net_payable, lang, 0)],
               ].map(([label, value]) => (
-                <div key={label} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 print:border-gray-300 print:shadow-none">
-                  <p className="text-xs text-gray-500">{label}</p>
-                  <p className="text-lg font-semibold text-gray-900">{value}</p>
+                <div key={label} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 print:border-gray-300 print:shadow-none">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{label}</p>
+                  <p className="text-lg font-semibold text-gray-900 dark:text-white">{value}</p>
                 </div>
               ))}
             </section>
 
             {totals.warnings.length > 0 && (
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-900 print:hidden">
+              <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-sm text-amber-900 dark:text-amber-200 print:hidden">
                 <p className="font-medium mb-1">{t('warnings')}</p>
                 <ul className="list-disc pl-5 space-y-0.5">
                   {totals.warnings.map((w) => {
@@ -111,7 +111,7 @@ export default function MonthReport() {
             )}
 
             {mode === 'legacy' ? (
-              <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 text-sm text-gray-600 space-y-2">
+              <section className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 text-sm text-gray-600 dark:text-gray-300 space-y-2">
                 <p>{t('legacyMonth')}</p>
                 <ul className="list-disc pl-5">
                   {Object.entries(totals.category_totals).map(([k, v]) => <li key={k}>{k}: {formatTk(v, lang, 0)}</li>)}
@@ -119,34 +119,34 @@ export default function MonthReport() {
                 </ul>
               </section>
             ) : (
-              <section className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-x-auto print:border-0 print:shadow-none">
+              <section className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-x-auto print:border-0 print:shadow-none">
                 <table className="w-full text-xs md:text-sm border-collapse">
                   <thead>
-                    <tr className="bg-gray-50 text-gray-500 border-b border-gray-200">
+                    <tr className="bg-gray-50 dark:bg-gray-800/60 text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-800">
                       <th className="p-2"></th>
                       <th className="p-2"></th>
-                      <th colSpan={1 + postpaid.length} className="p-2 text-center font-medium border-l border-gray-200">{t('postpaidSection')}</th>
-                      {prepaid.length > 0 && <th colSpan={prepaid.length} className="p-2 text-center font-medium border-l border-gray-200">{t('prepaidSection')}</th>}
-                      <th colSpan={6} className="p-2 text-center font-medium border-l border-gray-200">{t('settlement')}</th>
+                      <th colSpan={1 + postpaid.length} className="p-2 text-center font-medium border-l border-gray-200 dark:border-gray-800">{t('postpaidSection')}</th>
+                      {prepaid.length > 0 && <th colSpan={prepaid.length} className="p-2 text-center font-medium border-l border-gray-200 dark:border-gray-800">{t('prepaidSection')}</th>}
+                      <th colSpan={6} className="p-2 text-center font-medium border-l border-gray-200 dark:border-gray-800">{t('settlement')}</th>
                     </tr>
-                    <tr className="bg-gray-50 text-gray-600 border-b border-gray-200">
-                      <th className="p-2 text-left font-medium sticky left-0 bg-gray-50">{t('name')}</th>
+                    <tr className="bg-gray-50 dark:bg-gray-800/60 text-gray-600 dark:text-gray-300 border-b border-gray-200 dark:border-gray-800">
+                      <th className="p-2 text-left font-medium sticky left-0 bg-gray-50 dark:bg-gray-800">{t('name')}</th>
                       {columns.map((c) => (
-                        <th key={c.key} className={`p-2 text-right font-medium whitespace-nowrap ${c.key === 'meal_cost' || c.key === `cat:${prepaid[0]?.id}` || c.key === 'total_charges' ? 'border-l border-gray-200' : ''}`}>{c.label}</th>
+                        <th key={c.key} className={`p-2 text-right font-medium whitespace-nowrap ${c.key === 'meal_cost' || c.key === `cat:${prepaid[0]?.id}` || c.key === 'total_charges' ? 'border-l border-gray-200 dark:border-gray-800' : ''}`}>{c.label}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {rows.map((r) => (
-                      <tr key={r.uid} className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
-                        <td className="p-2 font-medium text-gray-900 whitespace-nowrap sticky left-0 bg-white">
+                      <tr key={r.uid} className="border-b border-gray-100 dark:border-gray-800 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-800/40">
+                        <td className="p-2 font-medium text-gray-900 dark:text-white whitespace-nowrap sticky left-0 bg-white dark:bg-gray-900">
                           {r.name}
-                          {r.weight !== 1 && <span className="ml-1 text-xs text-gray-400">×{r.weight}</span>}
+                          {r.weight !== 1 && <span className="ml-1 text-xs text-gray-400 dark:text-gray-500">×{r.weight}</span>}
                         </td>
                         {columns.map((c) => {
                           const v = c.value(r);
                           return (
-                            <td key={c.key} className={`p-2 text-right whitespace-nowrap ${c.key === 'net_payable' ? (v > 0 ? 'font-semibold text-red-700' : v < 0 ? 'font-semibold text-green-700' : 'font-semibold text-gray-900') : 'text-gray-700'} ${c.key === 'meal_cost' || c.key === `cat:${prepaid[0]?.id}` || c.key === 'total_charges' ? 'border-l border-gray-100' : ''}`}>
+                            <td key={c.key} className={`p-2 text-right whitespace-nowrap ${c.key === 'net_payable' ? (v > 0 ? 'font-semibold text-red-700 dark:text-red-400' : v < 0 ? 'font-semibold text-green-700 dark:text-green-400' : 'font-semibold text-gray-900 dark:text-white') : 'text-gray-700 dark:text-gray-300'} ${c.key === 'meal_cost' || c.key === `cat:${prepaid[0]?.id}` || c.key === 'total_charges' ? 'border-l border-gray-100 dark:border-gray-800' : ''}`}>
                               {fmt(c, v)}
                             </td>
                           );
@@ -154,13 +154,13 @@ export default function MonthReport() {
                       </tr>
                     ))}
                     {rows.length === 0 && (
-                      <tr><td colSpan={columns.length + 1} className="p-4 text-center text-gray-400">{t('noEntriesYet')}</td></tr>
+                      <tr><td colSpan={columns.length + 1} className="p-4 text-center text-gray-400 dark:text-gray-500">{t('noEntriesYet')}</td></tr>
                     )}
                   </tbody>
                   {rows.length > 0 && (
                     <tfoot>
-                      <tr className="bg-gray-50 border-t-2 border-gray-300 font-semibold text-gray-900">
-                        <td className="p-2 sticky left-0 bg-gray-50">{t('totals')}</td>
+                      <tr className="bg-gray-50 dark:bg-gray-800/60 border-t-2 border-gray-300 dark:border-gray-700 font-semibold text-gray-900 dark:text-white">
+                        <td className="p-2 sticky left-0 bg-gray-50 dark:bg-gray-800">{t('totals')}</td>
                         {columns.map((c, i) => <td key={c.key} className="p-2 text-right whitespace-nowrap">{fmt(c, sums[i])}</td>)}
                       </tr>
                     </tfoot>

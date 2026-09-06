@@ -83,25 +83,25 @@ export default function MonthCostsForm({ month, categories, users }: Props) {
     }
   };
 
-  const inputClass = 'w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20';
+  const inputClass = 'w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors';
 
   return (
-    <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-      <h2 className="text-lg font-medium text-gray-900 mb-1">{t('monthlyCosts')} · {month.month_id}</h2>
-      <p className="text-sm text-gray-500 mb-4">{rentFromMonth ? t('monthlyCostsHintBackfill') : t('monthlyCostsHint')}</p>
+    <section className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
+      <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">{t('monthlyCosts')} · {month.month_id}</h2>
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{rentFromMonth ? t('monthlyCostsHintBackfill') : t('monthlyCostsHint')}</p>
 
       <form onSubmit={save} className="space-y-6">
         <div>
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">{t('sharedCosts')}</h3>
+          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('sharedCosts')}</h3>
           {shared.length === 0 ? (
-            <p className="text-sm text-gray-400">{t('noActiveCategories')}</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500">{t('noActiveCategories')}</p>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {shared.map((c) => (
                 <div key={c.id}>
-                  <label className="block text-sm text-gray-600 mb-1">
+                  <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">
                     {labelOf(c, lang)}
-                    <span className="ml-1 text-xs text-gray-400">
+                    <span className="ml-1 text-xs text-gray-400 dark:text-gray-500">
                       · {c.split_rule === 'by_meals' ? t('splitByMeals') : t('splitEqual')} · {c.timing === 'prepaid' ? t('timingPrepaid') : t('timingPostpaid')}
                     </span>
                   </label>
@@ -119,39 +119,39 @@ export default function MonthCostsForm({ month, categories, users }: Props) {
 
         {(perMember.length > 0 || rentCategory) && (
           <div>
-            <h3 className="text-sm font-semibold text-gray-700 mb-2">{t('perMemberCosts')}</h3>
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('perMemberCosts')}</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm border-collapse">
                 <thead>
-                  <tr className="bg-gray-50 text-gray-600 border-b border-gray-200">
+                  <tr className="bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700">
                     <th className="p-2 text-left font-medium">{t('name')}</th>
                     <th className="p-2 text-left font-medium">{t('memberShare')}</th>
-                    {rentCategory && <th className="p-2 text-left font-medium">{labelOf(rentCategory, lang)} <span className="text-xs text-gray-400">({t('editInDirectory')})</span></th>}
+                    {rentCategory && <th className="p-2 text-left font-medium">{labelOf(rentCategory, lang)} <span className="text-xs text-gray-400 dark:text-gray-500">({t('editInDirectory')})</span></th>}
                     {perMember.map((c) => <th key={c.id} className="p-2 text-left font-medium">{labelOf(c, lang)}</th>)}
                   </tr>
                 </thead>
                 <tbody>
                   {users.map((u) => (
-                    <tr key={u.uid} className="border-b border-gray-100 last:border-0">
-                      <td className="p-2 text-gray-900 font-medium whitespace-nowrap">
+                    <tr key={u.uid} className="border-b border-gray-100 dark:border-gray-700 last:border-0 hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors">
+                      <td className="p-2 text-gray-900 dark:text-gray-100 font-medium whitespace-nowrap">
                         {u.name}
-                        {u.status === 'left' && <span className="ml-1 text-xs text-gray-400">({t('leftTag')})</span>}
+                        {u.status === 'left' && <span className="ml-1 text-xs text-gray-400 dark:text-gray-500">({t('leftTag')})</span>}
                       </td>
                       <td className="p-2">
-                        <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden">
+                        <div className="inline-flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
                           {WEIGHTS.map((w) => (
                             <button
                               key={w.value}
                               type="button"
                               onClick={() => setWeights({ ...weights, [u.uid]: w.value })}
-                              className={`px-2.5 py-1 text-xs font-medium ${(weights[u.uid] ?? 1) === w.value ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                              className={`px-2.5 py-1 text-xs font-medium transition-colors ${(weights[u.uid] ?? 1) === w.value ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'}`}
                             >
                               {t(w.key)}
                             </button>
                           ))}
                         </div>
                       </td>
-                      {rentCategory && <td className="p-2 text-gray-700">{formatTk(Number(u.room_rent) || 0, lang, 0)}</td>}
+                      {rentCategory && <td className="p-2 text-gray-700 dark:text-gray-300">{formatTk(Number(u.room_rent) || 0, lang, 0)}</td>}
                       {perMember.map((c) => (
                         <td key={c.id} className="p-2">
                           <input
@@ -170,7 +170,7 @@ export default function MonthCostsForm({ month, categories, users }: Props) {
           </div>
         )}
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 text-sm text-blue-900">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/60 rounded-lg px-4 py-3 text-sm text-blue-900 dark:text-blue-200 transition-colors">
           <div className="flex flex-wrap gap-x-6 gap-y-1">
             <span>{t('totalShared')}: <strong>{formatTk(sharedTotal, lang, 0)}</strong></span>
             <span>{t('totalPerMember')}: <strong>{formatTk(perMemberTotal + rentTotal, lang, 0)}</strong></span>

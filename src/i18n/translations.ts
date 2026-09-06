@@ -335,7 +335,11 @@ export const translations = {
     yearOverview: 'বছরের সারসংক্ষেপ',
     memberTotals: 'সদস্যভিত্তিক মোট (বন্ধ মাসগুলো)',
     inProgress: 'চলছে',
-    pushWorkerMissing: 'টেস্ট পাঠাতে VITE_PUSH_WORKER_URL সেট করুন।'
+    pushWorkerMissing: 'টেস্ট পাঠাতে VITE_PUSH_WORKER_URL সেট করুন।',
+    theme: 'থিম',
+    themeLight: 'লাইট',
+    themeDark: 'ডার্ক',
+    themeSystem: 'সিস্টেম'
   },
   en: {
     appTitle: 'Mess Manager',
@@ -673,7 +677,11 @@ export const translations = {
     yearOverview: 'Year overview',
     memberTotals: 'Per-member totals (closed months)',
     inProgress: 'in progress',
-    pushWorkerMissing: 'Set VITE_PUSH_WORKER_URL to send test notifications.'
+    pushWorkerMissing: 'Set VITE_PUSH_WORKER_URL to send test notifications.',
+    theme: 'Theme',
+    themeLight: 'Light',
+    themeDark: 'Dark',
+    themeSystem: 'System'
   }
 };
 

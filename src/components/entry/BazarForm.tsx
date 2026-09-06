@@ -90,7 +90,11 @@ export default function BazarForm({ uid, date, suggestions, editing, onDone, dis
             key={option}
             type="button"
             onClick={() => setType(option)}
-            className={`h-11 rounded-lg text-sm font-medium border ${type === option ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-200'}`}
+            className={`h-11 rounded-lg text-sm font-medium border ${
+              type === option
+                ? 'bg-blue-600 text-white border-blue-600'
+                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-500'
+            }`}
           >
             {option === 'personal' ? t('personalMoney') : t('fromFund')}
           </button>
@@ -105,7 +109,7 @@ export default function BazarForm({ uid, date, suggestions, editing, onDone, dis
           value={items}
           onChange={(e) => setItems(e.target.value)}
           placeholder={t('itemsDesc')}
-          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20"
         />
         <datalist id="bazar-items">
           {suggestions.map((s) => <option key={s} value={s} />)}
@@ -113,7 +117,12 @@ export default function BazarForm({ uid, date, suggestions, editing, onDone, dis
         {matches.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mt-2">
             {matches.map((s) => (
-              <button key={s} type="button" onClick={() => applySuggestion(s)} className="px-3 py-1 rounded-full text-xs bg-gray-100 text-gray-700 hover:bg-blue-100 hover:text-blue-800">
+              <button
+                key={s}
+                type="button"
+                onClick={() => applySuggestion(s)}
+                className="px-3 py-1 rounded-full text-xs bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-blue-100 dark:hover:bg-blue-900/40 hover:text-blue-800 dark:hover:text-blue-300"
+              >
                 {s}
               </button>
             ))}
@@ -126,7 +135,7 @@ export default function BazarForm({ uid, date, suggestions, editing, onDone, dis
           {saving ? t('loading') : editing ? t('update') : t('addExpense')}
         </button>
         {editing && (
-          <button type="button" onClick={onDone} className="h-12 px-4 rounded-lg text-sm font-medium text-gray-600 border border-gray-200">
+          <button type="button" onClick={onDone} className="h-12 px-4 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
             {t('cancel')}
           </button>
         )}

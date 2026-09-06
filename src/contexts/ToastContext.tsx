@@ -45,7 +45,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           <div
             key={item.id}
             className={`pointer-events-auto flex items-center gap-3 rounded-xl px-4 py-3 shadow-lg text-sm text-white max-w-md w-full ${
-              item.tone === 'error' ? 'bg-red-600' : item.tone === 'info' ? 'bg-gray-800' : 'bg-green-600'
+              item.tone === 'error' ? 'bg-red-600' : item.tone === 'info' ? 'bg-gray-800 dark:bg-gray-700' : 'bg-green-600'
             }`}
           >
             <span className="flex-1">{item.message}</span>

@@ -89,29 +89,33 @@ export default function PaymentsTable({ messId, monthId, members, payments, mana
     }
   };
 
-  const inputClass = 'w-full px-2 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-sm';
-  const statusClass: Record<PaymentDoc['status'], string> = { pending: 'bg-amber-100 text-amber-800', confirmed: 'bg-green-100 text-green-800', rejected: 'bg-red-100 text-red-800' };
+  const inputClass = 'w-full px-2 py-1.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 rounded-lg text-sm';
+  const statusClass: Record<PaymentDoc['status'], string> = {
+    pending: 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300',
+    confirmed: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',
+    rejected: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300',
+  };
   const statusKey: Record<PaymentDoc['status'], 'statusPending' | 'statusConfirmed' | 'statusRejected'> = { pending: 'statusPending', confirmed: 'statusConfirmed', rejected: 'statusRejected' };
 
   return (
     <div className="space-y-4">
       {!disabled && (
-        <form onSubmit={submit} className="grid grid-cols-2 md:grid-cols-6 gap-2 items-end bg-gray-50 border border-gray-100 rounded-lg p-3">
-          <div className="col-span-2 md:col-span-6 text-sm font-semibold text-gray-700">{editingId ? t('editing') : t('addRow')}</div>
-          <div><label className="block text-xs text-gray-500 mb-1">{t('date')}</label><input type="date" min={range.start} max={range.end} className={inputClass} value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} required /></div>
-          <div><label className="block text-xs text-gray-500 mb-1">{t('member')}</label>
+        <form onSubmit={submit} className="grid grid-cols-2 md:grid-cols-6 gap-2 items-end bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-lg p-3">
+          <div className="col-span-2 md:col-span-6 text-sm font-semibold text-gray-700 dark:text-gray-200">{editingId ? t('editing') : t('addRow')}</div>
+          <div><label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">{t('date')}</label><input type="date" min={range.start} max={range.end} className={inputClass} value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} required /></div>
+          <div><label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">{t('member')}</label>
             <select className={inputClass} value={form.user_id} onChange={(e) => setForm({ ...form, user_id: e.target.value })} required>
               {members.map((m) => <option key={m.uid} value={m.uid}>{m.name}</option>)}
             </select></div>
-          <div><label className="block text-xs text-gray-500 mb-1">{t('amountTk')}</label><AmountInput value={form.amount} onChange={(v) => setForm({ ...form, amount: v })} className="!py-1.5 !text-sm" /></div>
-          <div><label className="block text-xs text-gray-500 mb-1">{t('purpose')}</label>
+          <div><label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">{t('amountTk')}</label><AmountInput value={form.amount} onChange={(v) => setForm({ ...form, amount: v })} className="!py-1.5 !text-sm" /></div>
+          <div><label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">{t('purpose')}</label>
             <select className={inputClass} value={form.purpose} onChange={(e) => setForm({ ...form, purpose: e.target.value as PaymentPurpose })}>
               {(Object.keys(PURPOSE_KEYS) as PaymentPurpose[]).map((p) => <option key={p} value={p}>{t(PURPOSE_KEYS[p])}</option>)}
             </select></div>
-          <div><label className="block text-xs text-gray-500 mb-1">{t('note')}</label><input className={inputClass} value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} /></div>
+          <div><label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">{t('note')}</label><input className={inputClass} value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} /></div>
           <div className="flex gap-2">
             <button type="submit" disabled={busy} className="flex-1 h-9 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50">{editingId ? t('update') : t('add')}</button>
-            {editingId && <button type="button" onClick={() => { setEditingId(null); setForm(blank()); }} className="h-9 px-3 text-sm text-gray-600 border border-gray-200 rounded-lg">{t('cancel')}</button>}
+            {editingId && <button type="button" onClick={() => { setEditingId(null); setForm(blank()); }} className="h-9 px-3 text-sm text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg">{t('cancel')}</button>}
           </div>
         </form>
       )}
@@ -119,7 +123,7 @@ export default function PaymentsTable({ messId, monthId, members, payments, mana
       <div className="overflow-x-auto">
         <table className="w-full text-sm border-collapse">
           <thead>
-            <tr className="bg-gray-50 text-gray-600 border-b border-gray-200">
+            <tr className="bg-gray-50 dark:bg-gray-800/60 text-gray-600 dark:text-gray-300 border-b border-gray-200 dark:border-gray-800">
               <th className="p-2 text-left font-medium">{t('date')}</th>
               <th className="p-2 text-left font-medium">{t('member')}</th>
               <th className="p-2 text-left font-medium">{t('purpose')}</th>
@@ -130,28 +134,28 @@ export default function PaymentsTable({ messId, monthId, members, payments, mana
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={row.id} className={`border-b border-gray-100 last:border-0 ${editingId === row.id ? 'bg-blue-50' : ''}`}>
-                <td className="p-2 text-gray-500 whitespace-nowrap">{formatDateId(row.data.date)}</td>
-                <td className="p-2 text-gray-900">{nameOf(row.data.user_id)}{row.data.note && <span className="block text-xs text-gray-400">{row.data.note}</span>}</td>
-                <td className="p-2 text-gray-500">{t(PURPOSE_KEYS[row.data.purpose] ?? 'purposeFund')}</td>
+              <tr key={row.id} className={`border-b border-gray-100 dark:border-gray-800 last:border-0 hover:bg-gray-50/50 dark:hover:bg-gray-800/40 ${editingId === row.id ? 'bg-blue-50 dark:bg-blue-950/40' : ''}`}>
+                <td className="p-2 text-gray-500 dark:text-gray-400 whitespace-nowrap">{formatDateId(row.data.date)}</td>
+                <td className="p-2 text-gray-900 dark:text-white">{nameOf(row.data.user_id)}{row.data.note && <span className="block text-xs text-gray-400 dark:text-gray-500">{row.data.note}</span>}</td>
+                <td className="p-2 text-gray-500 dark:text-gray-400">{t(PURPOSE_KEYS[row.data.purpose] ?? 'purposeFund')}</td>
                 <td className="p-2"><span className={`text-xs px-2 py-0.5 rounded-full ${statusClass[row.data.status]}`}>{t(statusKey[row.data.status])}</span></td>
-                <td className="p-2 text-right font-medium text-gray-900">{formatTk(row.data.amount, lang, 0)}</td>
+                <td className="p-2 text-right font-medium text-gray-900 dark:text-white">{formatTk(row.data.amount, lang, 0)}</td>
                 <td className="p-2 text-right whitespace-nowrap">
                   {!disabled && (
                     <>
-                      {row.data.status === 'pending' && <button onClick={() => setStatus(row, 'confirmed')} className="text-xs font-medium text-green-700 px-2">{t('confirm')}</button>}
-                      {row.data.status === 'pending' && <button onClick={() => setStatus(row, 'rejected')} className="text-xs font-medium text-red-600 px-2">{t('reject')}</button>}
-                      <button onClick={() => { setEditingId(row.id); setForm({ date: row.data.date, user_id: row.data.user_id, amount: String(row.data.amount), purpose: row.data.purpose, note: row.data.note || '' }); }} className="text-xs font-medium text-blue-600 px-2">{t('edit')}</button>
-                      <button onClick={() => remove(row)} className="text-xs font-medium text-red-600 px-2">{t('delete')}</button>
+                      {row.data.status === 'pending' && <button onClick={() => setStatus(row, 'confirmed')} className="text-xs font-medium text-green-700 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 px-2">{t('confirm')}</button>}
+                      {row.data.status === 'pending' && <button onClick={() => setStatus(row, 'rejected')} className="text-xs font-medium text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 px-2">{t('reject')}</button>}
+                      <button onClick={() => { setEditingId(row.id); setForm({ date: row.data.date, user_id: row.data.user_id, amount: String(row.data.amount), purpose: row.data.purpose, note: row.data.note || '' }); }} className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 px-2">{t('edit')}</button>
+                      <button onClick={() => remove(row)} className="text-xs font-medium text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 px-2">{t('delete')}</button>
                     </>
                   )}
                 </td>
               </tr>
             ))}
-            {rows.length === 0 && <tr><td colSpan={6} className="p-4 text-center text-gray-400">{t('noRows')}</td></tr>}
+            {rows.length === 0 && <tr><td colSpan={6} className="p-4 text-center text-gray-400 dark:text-gray-500">{t('noRows')}</td></tr>}
           </tbody>
           {rows.length > 0 && (
-            <tfoot><tr className="bg-gray-50 font-semibold text-gray-900"><td colSpan={4} className="p-2">{t('statusConfirmed')} · {t('totals')}</td><td className="p-2 text-right">{formatTk(confirmedTotal, lang, 0)}</td><td></td></tr></tfoot>
+            <tfoot><tr className="bg-gray-50 dark:bg-gray-800/60 font-semibold text-gray-900 dark:text-white border-t-2 border-gray-200 dark:border-gray-700"><td colSpan={4} className="p-2">{t('statusConfirmed')} · {t('totals')}</td><td className="p-2 text-right">{formatTk(confirmedTotal, lang, 0)}</td><td></td></tr></tfoot>
           )}
         </table>
       </div>

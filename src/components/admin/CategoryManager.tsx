@@ -112,7 +112,7 @@ export default function CategoryManager({ categories }: Props) {
     }
   };
 
-  const inputClass = 'w-full px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20';
+  const inputClass = 'w-full px-3 py-1.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors';
 
   const splitOptions: { value: SplitRule; label: string }[] = [
     { value: 'equal', label: t('splitEqual') },
@@ -125,17 +125,17 @@ export default function CategoryManager({ categories }: Props) {
   ];
 
   return (
-    <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+    <section className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
       <div className="flex justify-between items-start gap-4 mb-1">
-        <h2 className="text-lg font-medium text-gray-900">{t('costCategories')}</h2>
-        <button onClick={() => setAdding((v) => !v)} className="text-sm font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap">
+        <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">{t('costCategories')}</h2>
+        <button onClick={() => setAdding((v) => !v)} className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap">
           {adding ? t('cancel') : `+ ${t('addCategory')}`}
         </button>
       </div>
-      <p className="text-sm text-gray-500 mb-4">{t('costCategoriesHint')}</p>
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{t('costCategoriesHint')}</p>
 
       {adding && (
-        <form onSubmit={add} className="grid grid-cols-2 md:grid-cols-5 gap-3 bg-blue-50 border border-blue-100 rounded-lg p-4 mb-4">
+        <form onSubmit={add} className="grid grid-cols-2 md:grid-cols-5 gap-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/60 rounded-lg p-4 mb-4">
           <input className={inputClass} placeholder={t('labelBn')} value={newItem.label_bn} onChange={(e) => setNewItem({ ...newItem, label_bn: e.target.value })} />
           <input className={inputClass} placeholder={t('labelEn')} value={newItem.label_en} onChange={(e) => setNewItem({ ...newItem, label_en: e.target.value })} required />
           <select className={inputClass} value={newItem.split_rule} onChange={(e) => setNewItem({ ...newItem, split_rule: e.target.value as SplitRule })}>
@@ -153,7 +153,7 @@ export default function CategoryManager({ categories }: Props) {
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse text-sm">
           <thead>
-            <tr className="bg-gray-50 text-gray-600 border-b border-gray-200">
+            <tr className="bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700">
               <th className="p-2 font-medium w-16">{t('order')}</th>
               <th className="p-2 font-medium">{t('labelBn')}</th>
               <th className="p-2 font-medium">{t('labelEn')}</th>
@@ -167,10 +167,10 @@ export default function CategoryManager({ categories }: Props) {
             {categories.map((category, index) => {
               const draft = draftOf(category);
               return (
-                <tr key={category.id} className={`border-b border-gray-100 last:border-0 ${category.active ? '' : 'opacity-50'}`}>
+                <tr key={category.id} className={`border-b border-gray-100 dark:border-gray-700 last:border-0 hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors ${category.active ? '' : 'opacity-50'}`}>
                   <td className="p-2 whitespace-nowrap">
-                    <button onClick={() => move(index, -1)} disabled={index === 0} className="px-1 text-gray-500 disabled:opacity-30" aria-label="up">▲</button>
-                    <button onClick={() => move(index, 1)} disabled={index === categories.length - 1} className="px-1 text-gray-500 disabled:opacity-30" aria-label="down">▼</button>
+                    <button onClick={() => move(index, -1)} disabled={index === 0} className="px-1 text-gray-500 dark:text-gray-400 disabled:opacity-30" aria-label="up">▲</button>
+                    <button onClick={() => move(index, 1)} disabled={index === categories.length - 1} className="px-1 text-gray-500 dark:text-gray-400 disabled:opacity-30" aria-label="down">▼</button>
                   </td>
                   <td className="p-2"><input className={inputClass} value={draft.label_bn} onChange={(e) => setDraft(category, { label_bn: e.target.value })} /></td>
                   <td className="p-2"><input className={inputClass} value={draft.label_en} onChange={(e) => setDraft(category, { label_en: e.target.value })} /></td>

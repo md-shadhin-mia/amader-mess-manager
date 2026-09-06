@@ -6,6 +6,7 @@ import { useAuth } from '../AuthContext';
 import { useMess } from '../contexts/MessContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useToast } from '../contexts/ToastContext';
+import ThemeToggle from '../components/ThemeToggle';
 import { createMess, joinMess, MessError } from '../lib/mess';
 import { DEFAULT_TIMEZONE, normalizeJoinCode } from '../lib/tenant';
 
@@ -80,50 +81,51 @@ export default function Messes() {
     }
   };
 
-  const inputClass = 'w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20';
+  const inputClass = 'w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors';
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-12">
-      <header className="bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center sticky top-0 z-10">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-12 transition-colors">
+      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center sticky top-0 z-10 transition-colors">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">{t('appTitle')}</h1>
-          <p className="text-sm text-gray-500">{account?.name} · {account?.email}</p>
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t('appTitle')}</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{account?.name} · {account?.email}</p>
         </div>
         <div className="flex items-center gap-3">
-          {isSuperAdmin && <Link to="/super" className="text-sm font-medium text-purple-700 hover:text-purple-900">{t('superAdmin')}</Link>}
-          <div className="bg-gray-100 rounded-lg p-1 flex">
-            <button onClick={() => setLang('bn')} className={`px-3 py-1 text-sm font-medium rounded-md ${lang === 'bn' ? 'bg-white shadow text-blue-700' : 'text-gray-500'}`}>বাংলা</button>
-            <button onClick={() => setLang('en')} className={`px-3 py-1 text-sm font-medium rounded-md ${lang === 'en' ? 'bg-white shadow text-blue-700' : 'text-gray-500'}`}>EN</button>
+          {isSuperAdmin && <Link to="/super" className="text-sm font-medium text-purple-700 dark:text-purple-400 hover:text-purple-900 dark:hover:text-purple-300">{t('superAdmin')}</Link>}
+          <ThemeToggle />
+          <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-1 flex">
+            <button onClick={() => setLang('bn')} className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${lang === 'bn' ? 'bg-white dark:bg-gray-600 shadow text-blue-700 dark:text-blue-300' : 'text-gray-500 dark:text-gray-400'}`}>বাংলা</button>
+            <button onClick={() => setLang('en')} className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${lang === 'en' ? 'bg-white dark:bg-gray-600 shadow text-blue-700 dark:text-blue-300' : 'text-gray-500 dark:text-gray-400'}`}>EN</button>
           </div>
-          <button onClick={() => auth.signOut()} className="text-sm font-medium text-red-600 hover:text-red-700">{t('signOut')}</button>
+          <button onClick={() => auth.signOut()} className="text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300">{t('signOut')}</button>
         </div>
       </header>
 
       <main className="max-w-3xl mx-auto p-6 space-y-6">
         {legacy && (
-          <div className="bg-amber-50 border border-amber-200 text-amber-900 text-sm rounded-xl p-4">
+          <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-sm rounded-xl p-4">
             <p className="font-medium mb-1">{t('legacyDataTitle')}</p>
             <p>{t('legacyDataHint')}</p>
-            <code className="block mt-2 bg-white/70 rounded px-2 py-1 text-xs">bun run migrate --name "My Mess" --apply</code>
+            <code className="block mt-2 bg-white/70 dark:bg-gray-900/60 rounded px-2 py-1 text-xs">bun run migrate --name "My Mess" --apply</code>
           </div>
         )}
 
         {blocked && messId && (
-          <div className="bg-red-50 border border-red-200 text-red-800 text-sm rounded-xl p-4">{t('messBlocked')}</div>
+          <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 text-sm rounded-xl p-4">{t('messBlocked')}</div>
         )}
 
-        <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h2 className="text-lg font-medium text-gray-900 mb-1">{t('myMesses')}</h2>
-          <p className="text-sm text-gray-500 mb-4">{t('myMessesHint')}</p>
+        <section className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
+          <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">{t('myMesses')}</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{t('myMessesHint')}</p>
           {memberships.length === 0 ? (
-            <p className="text-sm text-gray-400">{t('noMessesYet')}</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500">{t('noMessesYet')}</p>
           ) : (
-            <ul className="divide-y divide-gray-100">
+            <ul className="divide-y divide-gray-100 dark:divide-gray-700">
               {memberships.map(([id, info]) => (
                 <li key={id} className="py-3 flex items-center justify-between gap-3">
                   <div>
-                    <p className="font-medium text-gray-900">{info.name}</p>
-                    {id === messId && <p className="text-xs text-green-700">{t('currentMess')}</p>}
+                    <p className="font-medium text-gray-900 dark:text-gray-100">{info.name}</p>
+                    {id === messId && <p className="text-xs text-green-700 dark:text-green-400">{t('currentMess')}</p>}
                   </div>
                   <button onClick={() => open(id)} disabled={busy === id} className="text-sm font-medium bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50">
                     {t('openMess')}
@@ -135,9 +137,9 @@ export default function Messes() {
         </section>
 
         <div className="grid md:grid-cols-2 gap-6">
-          <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <h2 className="text-lg font-medium text-gray-900 mb-1">{t('joinMess')}</h2>
-            <p className="text-sm text-gray-500 mb-4">{t('joinMessHint')}</p>
+          <section className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
+            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">{t('joinMess')}</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{t('joinMessHint')}</p>
             <form onSubmit={join} className="space-y-3">
               <input
                 value={code}
@@ -154,16 +156,16 @@ export default function Messes() {
             </form>
           </section>
 
-          <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <h2 className="text-lg font-medium text-gray-900 mb-1">{t('createMess')}</h2>
-            <p className="text-sm text-gray-500 mb-4">{t('createMessHint')}</p>
+          <section className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
+            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">{t('createMess')}</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{t('createMessHint')}</p>
             <form onSubmit={create} className="space-y-3">
               <input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('messName')} className={inputClass} required maxLength={60} />
               <input value={timezone} onChange={(e) => setTimezone(e.target.value)} placeholder="Asia/Dhaka" className={inputClass} />
               <button type="submit" disabled={busy === 'create'} className="w-full h-11 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:opacity-50">
                 {busy === 'create' ? t('loading') : t('createMess')}
               </button>
-              <p className="text-xs text-gray-400">{t('createMessPlanNote')}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">{t('createMessPlanNote')}</p>
             </form>
           </section>
         </div>

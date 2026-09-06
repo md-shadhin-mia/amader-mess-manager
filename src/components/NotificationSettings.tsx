@@ -85,14 +85,16 @@ export default function NotificationSettings() {
   const canTest = status === 'enabled' && Boolean(PUSH_WORKER_URL);
 
   return (
-    <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-      <h2 className="text-lg font-medium text-gray-900 mb-1">{t('pushNotifications')}</h2>
-      <p className="text-sm text-gray-500 mb-4">{t('pushDescription')}</p>
+    <section className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
+      <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">{t('pushNotifications')}</h2>
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{t('pushDescription')}</p>
 
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
         <span
           className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-            status === 'enabled' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+            status === 'enabled'
+              ? 'bg-green-100 dark:bg-green-950/60 text-green-700 dark:text-green-300'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
           }`}
         >
           {statusLabel[status]}
@@ -112,7 +114,7 @@ export default function NotificationSettings() {
           <button
             onClick={test}
             disabled={busy}
-            className="text-sm font-medium bg-white text-blue-700 border border-blue-200 px-4 py-2 rounded-lg hover:bg-blue-50 disabled:opacity-50"
+            className="text-sm font-medium bg-white dark:bg-gray-700 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 px-4 py-2 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors"
           >
             {t('pushSendTest')}
           </button>
@@ -120,10 +122,10 @@ export default function NotificationSettings() {
       </div>
 
       {status === 'enabled' && !PUSH_WORKER_URL && (
-        <p className="text-xs text-gray-400 mt-3">{t('pushWorkerMissing')}</p>
+        <p className="text-xs text-gray-400 dark:text-gray-500 mt-3">{t('pushWorkerMissing')}</p>
       )}
 
-      {message && <p className="text-sm text-gray-700 mt-3">{message}</p>}
+      {message && <p className="text-sm text-gray-700 dark:text-gray-300 mt-3">{message}</p>}
     </section>
   );
 }

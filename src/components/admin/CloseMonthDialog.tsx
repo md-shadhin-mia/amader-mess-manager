@@ -67,35 +67,35 @@ export default function CloseMonthDialog({ month, users, categories, mealTypes, 
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl shadow-lg w-full max-w-lg overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-          <h2 className="text-lg font-semibold text-gray-800">{t('closeMonthTitle')} · {month.month_id}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">{t('close')}</button>
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg w-full max-w-lg overflow-hidden border border-gray-100 dark:border-gray-700 transition-colors">
+        <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800/80">
+          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{t('closeMonthTitle')} · {month.month_id}</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">✕</button>
         </div>
         <div className="p-6 space-y-4">
-          <p className="text-sm text-gray-500">{t('closeMonthPreview')}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{t('closeMonthPreview')}</p>
           <dl className="grid grid-cols-2 gap-3 text-sm">
-            <div className="bg-gray-50 rounded-lg p-3"><dt className="text-gray-500">{t('totalMeals')}</dt><dd className="text-lg font-semibold text-gray-900">{formatCount(preview.total_meals, lang)}</dd></div>
-            <div className="bg-gray-50 rounded-lg p-3"><dt className="text-gray-500">{t('mealRate')}</dt><dd className="text-lg font-semibold text-gray-900">{formatTk(preview.meal_rate, lang)}</dd></div>
-            <div className="bg-gray-50 rounded-lg p-3"><dt className="text-gray-500">{t('totalBazar')}</dt><dd className="text-lg font-semibold text-gray-900">{formatTk(preview.total_bazar, lang, 0)}</dd></div>
-            <div className="bg-gray-50 rounded-lg p-3"><dt className="text-gray-500">{t('fundCashOnHand')}</dt><dd className={`text-lg font-semibold ${preview.fund_cash_on_hand < 0 ? 'text-red-600' : 'text-gray-900'}`}>{formatTk(preview.fund_cash_on_hand, lang, 0)}</dd></div>
-            <div className="bg-gray-50 rounded-lg p-3"><dt className="text-gray-500">{t('grandCharges')}</dt><dd className="text-lg font-semibold text-gray-900">{formatTk(preview.grand.charges, lang, 0)}</dd></div>
-            <div className="bg-gray-50 rounded-lg p-3"><dt className="text-gray-500">{t('grandNet')}</dt><dd className="text-lg font-semibold text-gray-900">{formatTk(preview.grand.net_payable, lang, 0)}</dd></div>
+            <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3"><dt className="text-gray-500 dark:text-gray-400">{t('totalMeals')}</dt><dd className="text-lg font-semibold text-gray-900 dark:text-gray-100">{formatCount(preview.total_meals, lang)}</dd></div>
+            <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3"><dt className="text-gray-500 dark:text-gray-400">{t('mealRate')}</dt><dd className="text-lg font-semibold text-gray-900 dark:text-gray-100">{formatTk(preview.meal_rate, lang)}</dd></div>
+            <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3"><dt className="text-gray-500 dark:text-gray-400">{t('totalBazar')}</dt><dd className="text-lg font-semibold text-gray-900 dark:text-gray-100">{formatTk(preview.total_bazar, lang, 0)}</dd></div>
+            <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3"><dt className="text-gray-500 dark:text-gray-400">{t('fundCashOnHand')}</dt><dd className={`text-lg font-semibold ${preview.fund_cash_on_hand < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'}`}>{formatTk(preview.fund_cash_on_hand, lang, 0)}</dd></div>
+            <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3"><dt className="text-gray-500 dark:text-gray-400">{t('grandCharges')}</dt><dd className="text-lg font-semibold text-gray-900 dark:text-gray-100">{formatTk(preview.grand.charges, lang, 0)}</dd></div>
+            <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3"><dt className="text-gray-500 dark:text-gray-400">{t('grandNet')}</dt><dd className="text-lg font-semibold text-gray-900 dark:text-gray-100">{formatTk(preview.grand.net_payable, lang, 0)}</dd></div>
           </dl>
 
           <label className="flex items-start gap-3 text-sm">
             <input type="checkbox" checked={applyAdvance} onChange={(e) => setApplyAdvance(e.target.checked)} className="mt-1" />
             <span>
-              <span className="font-medium text-gray-800">{t('applyAdvance')}</span>
-              <span className="block text-gray-500">{month.status === 'backfill' ? t('applyAdvanceBackfillHint') : t('applyAdvanceHint')}</span>
+              <span className="font-medium text-gray-800 dark:text-gray-200">{t('applyAdvance')}</span>
+              <span className="block text-gray-500 dark:text-gray-400">{month.status === 'backfill' ? t('applyAdvanceBackfillHint') : t('applyAdvanceHint')}</span>
             </span>
           </label>
 
           {preview.warnings.length > 0 && (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm">
-              <p className="font-medium text-amber-900 mb-1">{t('warnings')}</p>
-              <ul className="list-disc pl-5 text-amber-800 space-y-0.5">
+            <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-sm">
+              <p className="font-medium text-amber-900 dark:text-amber-200 mb-1">{t('warnings')}</p>
+              <ul className="list-disc pl-5 text-amber-800 dark:text-amber-300 space-y-0.5">
                 {preview.warnings.map((w) => {
                   const { key, detail } = describeWarning(w);
                   return <li key={w}>{t(key)}{detail ? ` (${users.find((u) => u.uid === detail)?.name || detail})` : ''}</li>;
@@ -105,7 +105,7 @@ export default function CloseMonthDialog({ month, users, categories, mealTypes, 
           )}
 
           <div className="flex justify-end gap-3 pt-2">
-            <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900">{t('cancel')}</button>
+            <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">{t('cancel')}</button>
             <button
               onClick={confirmClose}
               disabled={busy || blocking.length > 0}

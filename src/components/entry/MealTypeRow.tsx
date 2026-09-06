@@ -82,8 +82,8 @@ export default function MealTypeRow({ uid, date, mealTypes, current, disabled }:
         return (
           <div key={type.id} className="flex items-center gap-3">
             <div className="w-24 shrink-0">
-              <p className="text-sm font-medium text-gray-800">{labelOf(type, lang)}</p>
-              {type.weight !== 1 && <p className="text-xs text-gray-400">× {type.weight}</p>}
+              <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{labelOf(type, lang)}</p>
+              {type.weight !== 1 && <p className="text-xs text-gray-400 dark:text-gray-500">× {type.weight}</p>}
             </div>
             <div className="flex-1 grid grid-cols-5 gap-1.5">
               {PRESETS.map((preset) => (
@@ -93,7 +93,9 @@ export default function MealTypeRow({ uid, date, mealTypes, current, disabled }:
                   disabled={disabled || saving === type.id}
                   onClick={() => select(type.id, preset)}
                   className={`h-11 rounded-lg text-sm font-semibold transition-colors ${
-                    value === preset ? 'bg-blue-600 text-white shadow' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    value === preset
+                      ? 'bg-blue-600 text-white shadow'
+                      : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                   } disabled:opacity-50`}
                 >
                   {presetLabel(preset, lang)}
@@ -103,8 +105,8 @@ export default function MealTypeRow({ uid, date, mealTypes, current, disabled }:
           </div>
         );
       })}
-      <p className="text-sm text-gray-500 text-right">
-        {t('mealsToday')}: <strong className="text-gray-900">{formatCount(total, lang)}</strong>
+      <p className="text-sm text-gray-500 dark:text-gray-400 text-right">
+        {t('mealsToday')}: <strong className="text-gray-900 dark:text-white">{formatCount(total, lang)}</strong>
       </p>
     </div>
   );

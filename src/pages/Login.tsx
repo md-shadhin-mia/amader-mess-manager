@@ -3,6 +3,7 @@ import { signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
+import ThemeToggle from '../components/ThemeToggle';
 
 export default function Login() {
   const [error, setError] = useState('');
@@ -24,39 +25,42 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-      <div className="absolute top-4 right-4 bg-white rounded-lg shadow-sm border border-gray-100 p-1 flex">
-        <button 
-          onClick={() => setLang('bn')} 
-          className={`px-3 py-1 text-sm font-medium rounded-md ${lang === 'bn' ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50'}`}
-        >
-          বাংলা
-        </button>
-        <button 
-          onClick={() => setLang('en')} 
-          className={`px-3 py-1 text-sm font-medium rounded-md ${lang === 'en' ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50'}`}
-        >
-          English
-        </button>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center p-4 transition-colors">
+      <div className="absolute top-4 right-4 flex items-center gap-2">
+        <ThemeToggle />
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 p-1 flex">
+          <button 
+            onClick={() => setLang('bn')} 
+            className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${lang === 'bn' ? 'bg-blue-50 dark:bg-gray-700 text-blue-700 dark:text-blue-300' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+          >
+            বাংলা
+          </button>
+          <button 
+            onClick={() => setLang('en')} 
+            className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${lang === 'en' ? 'bg-blue-50 dark:bg-gray-700 text-blue-700 dark:text-blue-300' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+          >
+            English
+          </button>
+        </div>
       </div>
 
-      <div className="max-w-md w-full bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors">
         <div className="p-8 text-center">
           <div className="mb-8">
-            <h1 className="text-2xl font-semibold text-gray-900 mb-2">
+            <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
               {t('appTitle')}
             </h1>
-            <p className="text-sm text-gray-500">{t('loginPitch')}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t('loginPitch')}</p>
           </div>
           
           {error && (
-            <p className="text-red-500 text-sm mb-4">{error}</p>
+            <p className="text-red-500 dark:text-red-400 text-sm mb-4">{error}</p>
           )}
 
           <button 
             onClick={handleGoogleSignIn}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 text-gray-700 font-medium py-3 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 font-medium py-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
           >
             <svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
               <g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)">
