@@ -9,10 +9,7 @@
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
-    "test": "tsx --test src/lib/*.test.ts",
-    "seed": "tsx scripts/seed.ts",
-    "migrate": "tsx scripts/migrate-to-multitenant.ts",
-    "super-admin": "tsx scripts/set-super-admin.ts"
+    "test": "tsx --test src/lib/*.test.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
@@ -38,7 +35,6 @@
     "@types/react-dom": "^19",
     "autoprefixer": "^10.4.21",
     "esbuild": "^0.25.0",
-    "firebase-admin": "^13",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",

@@ -6,10 +6,13 @@ import { useToast } from '../contexts/ToastContext';
 import { useCollection } from '../hooks/useCollection';
 import { memberLimitFor, type AdminRecord, type Mess, type MessPlan, type MessStatus } from '../lib/tenant';
 import { adminRef, adminsCol } from '../lib/paths';
+import { useAuth } from '../AuthContext';
+import { migrateLegacyToMess } from '../lib/legacyMigration';
 import PageHeader from '../components/PageHeader';
 
 /** Platform console: every mess and administrators list. Super admins only (Firestore status). */
 export default function SuperAdmin() {
+  const { currentUser } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
   const { docs, loading } = useCollection<Omit<Mess, 'id'>>(() => query(collection(db, 'messes')), 'messes:all');
@@ -22,6 +25,9 @@ export default function SuperAdmin() {
   const [newAdminUid, setNewAdminUid] = useState('');
   const [newAdminEmail, setNewAdminEmail] = useState('');
   const [addingAdmin, setAddingAdmin] = useState(false);
+  const [migrating, setMigrating] = useState(false);
+  const [migrationProgress, setMigrationProgress] = useState<string | null>(null);
+  const [migrationName, setMigrationName] = useState('My Mess');
 
   const messes = docs.map((d) => ({ id: d.id, ...d.data })).sort((a, b) => a.name.localeCompare(b.name));
   const admins = adminDocs.map((d) => ({ uid: d.id, ...d.data }));
@@ -85,6 +91,27 @@ export default function SuperAdmin() {
       toast(t('saveFailed'), { tone: 'error' });
     } finally {
       setAddingAdmin(false);
+    }
+  };
+
+  const handleMigrate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUser) return;
+    if (!confirm(t('migrateConfirm'))) return;
+    setMigrating(true);
+    setMigrationProgress('Starting...');
+    try {
+      const res = await migrateLegacyToMess(db, migrationName.trim() || 'My Mess', currentUser.uid, (msg) => {
+        setMigrationProgress(msg);
+      });
+      toast(t('migrationComplete'));
+      setMigrationProgress(`Done! Wrote ${res.totalWritten} documents into mess.`);
+    } catch (err) {
+      console.error(err);
+      toast(t('migrationFailed'), { tone: 'error' });
+      setMigrationProgress(`Failed: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setMigrating(false);
     }
   };
 
@@ -234,6 +261,38 @@ export default function SuperAdmin() {
               {addingAdmin ? t('loading') : t('addAdmin')}
             </button>
           </form>
+        </section>
+
+        {/* Legacy Data Migration Section */}
+        <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mt-6">
+          <div className="mb-4">
+            <h2 className="text-base font-semibold text-gray-900">{t('migrateLegacy')}</h2>
+            <p className="text-xs text-gray-500">{t('migrateLegacyHint')}</p>
+          </div>
+
+          <form onSubmit={handleMigrate} className="flex flex-wrap items-center gap-3">
+            <input
+              type="text"
+              placeholder={t('messNamePlaceholder')}
+              value={migrationName}
+              onChange={(e) => setMigrationName(e.target.value)}
+              className="px-3 py-2 bg-gray-50 border border-gray-200 rounded text-sm min-w-[240px]"
+              required
+            />
+            <button
+              type="submit"
+              disabled={migrating || !currentUser}
+              className="px-4 py-2 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+            >
+              {migrating ? t('loading') : t('migrateNow')}
+            </button>
+          </form>
+
+          {migrationProgress && (
+            <p className="mt-3 text-xs font-mono text-gray-600 bg-gray-50 p-2.5 rounded border border-gray-200">
+              {migrationProgress}
+            </p>
+          )}
         </section>
       </main>
     </div>

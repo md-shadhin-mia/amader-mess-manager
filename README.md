@@ -47,35 +47,12 @@ npx firebase-tools deploy --only firestore
 Deploy the rules **before** merging a change that depends on them, so the
 live app never runs against older rules.
 
-### Seeding
+### Seeding & Administration
 
-Nothing to run: creating a mess in the app seeds its default cost
-categories and meal types. `bun run seed --add-missing` is an optional local
-tool for adding newly introduced defaults to existing messes.
-
-## Scripts (firebase-admin, need a service account)
-
-Set `GOOGLE_APPLICATION_CREDENTIALS=/path/to/sa.json` or
-`FIREBASE_SERVICE_ACCOUNT='{...}'` first.
-
-| Command | What it does |
-| --- | --- |
-| `bun run seed [--add-missing] [--mess <id>]` | Optional: adds default categories and meal types to existing messes (idempotent). |
-| `bun run migrate --name "My Mess" [--apply]` | Moves legacy single-tenant data into one mess. Dry-run by default. |
-| `bun run super-admin --email a@b.com [--remove]` | Grants the `super_admin` claim. Sign out and in afterwards. |
-| `bun run test` | Settlement, number and tenant unit tests. |
-
-### Migrating an existing single-tenant install
-
-1. Deploy the rules (`npx firebase-tools deploy --only firestore`); they keep
-   the legacy top-level collections working alongside `messes/**`. Then merge
-   so hosting deploys the new client.
-2. Run `bun run migrate --name "Your Mess"` and check the counts, then
-   `--apply`. The old manager becomes the owner; every user becomes a member.
-3. Users sign in and land in the migrated mess. Re-run the script once to
-   copy anything written in between (it is idempotent).
-4. Later, delete the legacy top-level collections and remove the "Legacy"
-   section from `firestore.rules`.
+- **Seeding**: Creating a mess in the app automatically seeds its default cost categories and meal types using standard client Firestore.
+- **Super Admin**: The first user to log in automatically becomes a platform administrator. Administrators can manage other admins and all messes directly from `/super`.
+- **Legacy Migration**: Super admins can migrate existing single-tenant data directly in the browser from `/super` without needing any backend scripts or service accounts.
+- **Testing**: Run `bun run test` to run unit tests.
 
 ## Push reminders
 
