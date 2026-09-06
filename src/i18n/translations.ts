@@ -41,6 +41,12 @@ export const translations = {
     bazarAdded: 'বাজার খরচ যুক্ত করা হয়েছে!',
     profileUpdated: 'প্রোফাইল আপডেট হয়েছে!',
     editProfile: 'প্রোফাইল এডিট করুন',
+    avatar: 'প্রোফাইল ছবি',
+    uploadAvatar: 'ছবি আপলোড করুন',
+    changeAvatar: 'ছবি পরিবর্তন করুন',
+    removeAvatar: 'ছবি মুছুন',
+    convertingAvatar: 'ছবি সাইজ করা হচ্ছে (১২৮x১২৮)...',
+    invalidImage: 'অনুগ্রহ করে সঠিক ইমেজ ফাইল দিন',
     close: 'বন্ধ করুন',
     ledgerSummary: 'আপনার হিসাব',
     optional: 'ঐচ্ছিক',
@@ -339,7 +345,17 @@ export const translations = {
     theme: 'থিম',
     themeLight: 'লাইট',
     themeDark: 'ডার্ক',
-    themeSystem: 'সিস্টেম'
+    themeSystem: 'সিস্টেম',
+    allowHalfMeals: '০.৫ (অর্ধেক) মিল অনুমোদন করুন',
+    allowHalfMealsHint: 'বন্ধ থাকলে মিল এন্ট্রিতে শুধু পূর্ণ সংখ্যা (০, ১, ২, ৩, ৪) দেখাবে। চালু থাকলে ০.৫ ও ১.৫ সহ দেখাবে।',
+    halfMealsEnabled: '০.৫ মিল চালু',
+    halfMealsDisabled: 'শুধু পূর্ণ সংখ্যা',
+    joinLink: 'যোগদানের লিংক',
+    copyLink: 'লিংক কপি',
+    linkCopied: 'যোগদানের লিংক কপি করা হয়েছে!',
+    joinInvitePrompt: 'আপনাকে এই মেসে যোগ দেওয়ার জন্য আমন্ত্রণ জানানো হয়েছে।',
+    joiningMess: 'মেসে যোগ দেওয়া হচ্ছে...',
+    signInToJoin: 'সরাসরি যোগ দিতে সাইন ইন করুন'
   },
   en: {
     appTitle: 'Mess Manager',
@@ -383,6 +399,12 @@ export const translations = {
     bazarAdded: 'Bazar expense added!',
     profileUpdated: 'Profile updated!',
     editProfile: 'Edit Profile',
+    avatar: 'Avatar',
+    uploadAvatar: 'Upload Avatar',
+    changeAvatar: 'Change Photo',
+    removeAvatar: 'Remove Photo',
+    convertingAvatar: 'Resizing image (128x128)...',
+    invalidImage: 'Please select a valid image file',
     close: 'Close',
     ledgerSummary: 'Personal Ledger',
     optional: 'Optional',
@@ -681,7 +703,17 @@ export const translations = {
     theme: 'Theme',
     themeLight: 'Light',
     themeDark: 'Dark',
-    themeSystem: 'System'
+    themeSystem: 'System',
+    allowHalfMeals: 'Allow 0.5 (Half) Meals',
+    allowHalfMealsHint: 'When disabled, meal entries use whole numbers (0, 1, 2, 3, 4). When enabled, 0.5 half-meals are included (0, 0.5, 1, 1.5, 2).',
+    halfMealsEnabled: '0.5 meals enabled',
+    halfMealsDisabled: 'Whole numbers only',
+    joinLink: 'Join Link',
+    copyLink: 'Copy Link',
+    linkCopied: 'Join link copied to clipboard!',
+    joinInvitePrompt: 'You have been invited to join this mess.',
+    joiningMess: 'Joining mess...',
+    signInToJoin: 'Sign in to join directly'
   }
 };
 

@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { useAuth } from '../AuthContext';
@@ -7,6 +7,7 @@ import { useMess } from '../contexts/MessContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useToast } from '../contexts/ToastContext';
 import ThemeToggle from '../components/ThemeToggle';
+import Avatar from '../components/Avatar';
 import { createMess, joinMess, MessError } from '../lib/mess';
 import { DEFAULT_TIMEZONE, normalizeJoinCode } from '../lib/tenant';
 
@@ -20,11 +21,19 @@ export default function Messes() {
   const { t, lang, setLang } = useLanguage();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const codeParam = searchParams.get('code');
   const [name, setName] = useState('');
   const [timezone, setTimezone] = useState(DEFAULT_TIMEZONE);
-  const [code, setCode] = useState('');
+  const [code, setCode] = useState(() => (codeParam ? normalizeJoinCode(codeParam) : ''));
   const [busy, setBusy] = useState<'create' | 'join' | string | null>(null);
   const [legacy, setLegacy] = useState(false);
+
+  useEffect(() => {
+    if (codeParam) {
+      setCode(normalizeJoinCode(codeParam));
+    }
+  }, [codeParam]);
 
   const memberships = Object.entries(account?.messes || {});
 
@@ -36,7 +45,7 @@ export default function Messes() {
       .catch(() => setLegacy(false));
   }, [memberships.length]);
 
-  const person = currentUser && account ? { uid: currentUser.uid, name: account.name, email: account.email, phone: account.phone } : null;
+  const person = currentUser && account ? { uid: currentUser.uid, name: account.name, email: account.email, phone: account.phone, photo_url: account.photo_url || currentUser.photoURL || '' } : null;
 
   const create = async (e: FormEvent) => {
     e.preventDefault();
@@ -86,9 +95,12 @@ export default function Messes() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-12 transition-colors">
       <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center sticky top-0 z-10 transition-colors">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t('appTitle')}</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">{account?.name} · {account?.email}</p>
+        <div className="flex items-center gap-3">
+          <Avatar name={account?.name} photoUrl={account?.photo_url || currentUser?.photoURL} size="md" />
+          <div>
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t('appTitle')}</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{account?.name} · {account?.email}</p>
+          </div>
         </div>
         <div className="flex items-center gap-3">
           {isSuperAdmin && <Link to="/super" className="text-sm font-medium text-purple-700 dark:text-purple-400 hover:text-purple-900 dark:hover:text-purple-300">{t('superAdmin')}</Link>}

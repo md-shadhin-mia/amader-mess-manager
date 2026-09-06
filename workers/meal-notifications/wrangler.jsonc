@@ -1,0 +1,17 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "amader-mess-notifications",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-02",
+  "triggers": {
+    "crons": ["* * * * *"]
+  },
+  "vars": {
+    "FIREBASE_PROJECT_ID": "amader-mess-manager",
+    "APP_URL": "https://amader-mess-manager.web.app"
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  }
+}

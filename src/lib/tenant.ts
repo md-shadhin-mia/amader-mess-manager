@@ -19,6 +19,7 @@ export interface Mess {
   member_count: number;
   timezone: string;
   join_code: string;
+  allow_half_meals?: boolean;
   created_at?: unknown;
   updated_at?: unknown;
 }
@@ -29,6 +30,7 @@ export interface Member {
   name: string;
   email: string;
   phone?: string;
+  photo_url?: string;
   role: MemberRole;
   advance_balance: number;
   room_rent: number;
@@ -43,6 +45,7 @@ export interface Account {
   name: string;
   email: string;
   phone: string;
+  photo_url?: string;
   status?: string;
   fcm_token?: string;
   fcm_token_updated_at?: unknown;

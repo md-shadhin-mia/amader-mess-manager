@@ -18,7 +18,8 @@ interface Props {
   disabled?: boolean;
 }
 
-const PRESETS = [0, 0.5, 1, 1.5, 2];
+const HALF_PRESETS = [0, 0.5, 1, 1.5, 2];
+const INTEGER_PRESETS = [0, 1, 2, 3, 4];
 
 function presetLabel(preset: number, lang: 'bn' | 'en'): string {
   const whole = Math.floor(preset);
@@ -35,7 +36,9 @@ function presetLabel(preset: number, lang: 'bn' | 'en'): string {
 export default function MealTypeRow({ uid, date, mealTypes, current, disabled }: Props) {
   const { t, lang } = useLanguage();
   const { toast } = useToast();
-  const messId = useMess().messId ?? '';
+  const { messId: currentMessId, mess } = useMess();
+  const messId = currentMessId ?? '';
+  const presets = mess?.allow_half_meals ? HALF_PRESETS : INTEGER_PRESETS;
   const [saving, setSaving] = useState<string | null>(null);
 
   // Legacy docs only carry meal_count; show it on the first type so nothing is hidden.
@@ -86,7 +89,7 @@ export default function MealTypeRow({ uid, date, mealTypes, current, disabled }:
               {type.weight !== 1 && <p className="text-xs text-gray-400 dark:text-gray-500">× {type.weight}</p>}
             </div>
             <div className="flex-1 grid grid-cols-5 gap-1.5">
-              {PRESETS.map((preset) => (
+              {presets.map((preset) => (
                 <button
                   key={preset}
                   type="button"

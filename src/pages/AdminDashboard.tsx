@@ -24,6 +24,7 @@ import MealTypeManager from '../components/admin/MealTypeManager';
 import MonthCostsForm from '../components/admin/MonthCostsForm';
 import PaymentsInbox from '../components/admin/PaymentsInbox';
 import CloseMonthDialog from '../components/admin/CloseMonthDialog';
+import Avatar from '../components/Avatar';
 
 export default function AdminDashboard() {
   const { currentUser, isSuperAdmin } = useAuth();
@@ -96,6 +97,17 @@ export default function AdminDashboard() {
       toast(t('codeCopied'));
     } catch {
       toast(mess.join_code, { tone: 'info', durationMs: 8000 });
+    }
+  };
+
+  const copyLink = async () => {
+    if (!mess?.join_code) return;
+    const link = `${window.location.origin}/join/${mess.join_code}`;
+    try {
+      await navigator.clipboard.writeText(link);
+      toast(t('linkCopied'));
+    } catch {
+      toast(link, { tone: 'info', durationMs: 8000 });
     }
   };
 
@@ -197,14 +209,23 @@ export default function AdminDashboard() {
       )}
 
       <header className="bg-blue-900 dark:bg-gray-900 border-b border-blue-950 dark:border-gray-800 px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 sticky top-0 z-10 text-white transition-colors">
-        <div>
-          <h1 className="text-xl font-semibold">{mess?.name ?? t('adminPanel')}</h1>
-          <p className="text-blue-200 dark:text-gray-400 text-sm">
-            {t('manager')}: {userProfile?.name} {userProfile?.phone && `(${userProfile.phone})`}
-            {' · '}
-            <Link to="/messes" className="underline hover:text-white">{t('switchMess')}</Link>
-            {isSuperAdmin && <> · <Link to="/super" className="underline hover:text-white">{t('superAdmin')}</Link></>}
-          </p>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowProfile(true)}
+            className="hover:opacity-80 transition-opacity focus:outline-none"
+            title={t('editProfile')}
+          >
+            <Avatar name={userProfile?.name} photoUrl={userProfile?.photo_url} size="md" />
+          </button>
+          <div>
+            <h1 className="text-xl font-semibold">{mess?.name ?? t('adminPanel')}</h1>
+            <p className="text-blue-200 dark:text-gray-400 text-sm">
+              {t('manager')}: {userProfile?.name} {userProfile?.phone && `(${userProfile.phone})`}
+              {' · '}
+              <Link to="/messes" className="underline hover:text-white">{t('switchMess')}</Link>
+              {isSuperAdmin && <> · <Link to="/super" className="underline hover:text-white">{t('superAdmin')}</Link></>}
+            </p>
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <Link to="/admin/months" className="text-sm font-medium bg-blue-800 dark:bg-gray-800 px-4 py-2 rounded hover:bg-blue-700 dark:hover:bg-gray-700 transition-colors">{t('monthReports')}</Link>
@@ -284,13 +305,27 @@ export default function AdminDashboard() {
                 ) : null}
               </form>
               <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/60 rounded-lg p-4">
-                <p className="text-xs text-blue-900 dark:text-blue-300 mb-1">{t('joinCode')}</p>
-                <p className="font-mono text-2xl tracking-widest text-blue-900 dark:text-blue-200 mb-2">{mess.join_code}</p>
-                <p className="text-xs text-blue-800 dark:text-blue-300/80 mb-3">{t('joinCodeHint')}</p>
-                <div className="flex gap-2">
-                  <button onClick={copyCode} className="text-sm font-medium bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">{t('copyCode')}</button>
-                  <button onClick={rotate} disabled={busy === 'rotate'} className="text-sm font-medium text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 px-4 py-2 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 disabled:opacity-50">{t('rotateCode')}</button>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
+                  <div>
+                    <p className="text-xs text-blue-900 dark:text-blue-300 mb-1">{t('joinCode')}</p>
+                    <p className="font-mono text-2xl tracking-widest text-blue-900 dark:text-blue-200">{mess.join_code}</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button onClick={copyLink} className="text-sm font-medium bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-1.5 shadow-sm">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                      </svg>
+                      {t('copyLink')}
+                    </button>
+                    <button onClick={copyCode} className="text-sm font-medium bg-white dark:bg-gray-800 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 px-3 py-2 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-700">
+                      {t('copyCode')}
+                    </button>
+                    <button onClick={rotate} disabled={busy === 'rotate'} className="text-sm font-medium text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50 px-3 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 disabled:opacity-50">
+                      {t('rotateCode')}
+                    </button>
+                  </div>
                 </div>
+                <p className="text-xs text-blue-800 dark:text-blue-300/80">{t('joinCodeHint')}</p>
               </div>
             </div>
           </section>
@@ -338,8 +373,13 @@ export default function AdminDashboard() {
                 {users.map((u) => (
                   <tr key={u.id} className="border-b border-gray-100 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                     <td className="p-4">
-                      <div className="text-gray-900 dark:text-gray-100 font-medium">{u.name}</div>
-                      <div className="text-xs text-gray-400 dark:text-gray-500">{u.email}</div>
+                      <div className="flex items-center gap-3">
+                        <Avatar name={u.name} photoUrl={u.photo_url} size="sm" />
+                        <div>
+                          <div className="text-gray-900 dark:text-gray-100 font-medium">{u.name}</div>
+                          <div className="text-xs text-gray-400 dark:text-gray-500">{u.email}</div>
+                        </div>
+                      </div>
                     </td>
                     <td className="p-4 text-gray-500 dark:text-gray-400">{u.phone || '-'}</td>
                     <td className="p-4">

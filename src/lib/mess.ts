@@ -15,6 +15,7 @@ interface Person {
   name: string;
   email: string;
   phone?: string;
+  photo_url?: string;
 }
 
 /**
@@ -26,6 +27,7 @@ export async function createMess(db: Firestore, person: Person, input: { name: s
   const name = input.name.trim();
   const messId = doc(collection(db, 'messes')).id;
   const code = generateJoinCode();
+
   const batch = writeBatch(db);
   batch.set(messRef(db, messId), {
     name,
@@ -43,6 +45,7 @@ export async function createMess(db: Firestore, person: Person, input: { name: s
     name: person.name,
     email: person.email,
     phone: person.phone || '',
+    photo_url: person.photo_url || '',
     role: 'manager',
     status: 'active',
     advance_balance: 0,
@@ -79,6 +82,7 @@ export async function joinMess(db: Firestore, person: Person, rawCode: string, a
     name: person.name,
     email: person.email,
     phone: person.phone || '',
+    photo_url: person.photo_url || '',
     role: 'member',
     status: 'active',
     advance_balance: 0,
@@ -127,3 +131,8 @@ export async function removeMember(db: Firestore, messId: string, uid: string): 
 export async function renameMess(db: Firestore, messId: string, name: string, timezone: string): Promise<void> {
   await updateDoc(messRef(db, messId), { name: name.trim(), timezone, updated_at: serverTimestamp() });
 }
+
+export async function setMessHalfMeals(db: Firestore, messId: string, allowHalfMeals: boolean): Promise<void> {
+  await updateDoc(messRef(db, messId), { allow_half_meals: allowHalfMeals, updated_at: serverTimestamp() });
+}
+

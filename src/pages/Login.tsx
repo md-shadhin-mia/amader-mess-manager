@@ -1,22 +1,44 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
+import { normalizeJoinCode } from '../lib/tenant';
 import ThemeToggle from '../components/ThemeToggle';
 
 export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { t, lang, setLang } = useLanguage();
+
+  const codeParam = searchParams.get('code');
+  const [inviteCode, setInviteCode] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (codeParam) {
+      const normalized = normalizeJoinCode(codeParam);
+      setInviteCode(normalized);
+      sessionStorage.setItem('pending_join_code', normalized);
+    } else {
+      const stored = sessionStorage.getItem('pending_join_code');
+      if (stored) setInviteCode(stored);
+    }
+  }, [codeParam]);
 
   const handleGoogleSignIn = async () => {
     setError('');
     setLoading(true);
     try {
       await signInWithPopup(auth, googleProvider);
-      navigate('/');
+      const pending = sessionStorage.getItem('pending_join_code') || inviteCode;
+      if (pending) {
+        sessionStorage.removeItem('pending_join_code');
+        navigate(`/join/${pending}`);
+      } else {
+        navigate('/');
+      }
     } catch (err: any) {
       console.error(err);
       setError(err.message);
@@ -55,6 +77,13 @@ export default function Login() {
           
           {error && (
             <p className="text-red-500 dark:text-red-400 text-sm mb-4">{error}</p>
+          )}
+
+          {inviteCode && (
+            <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/60 rounded-xl p-3 mb-6">
+              <p className="text-xs text-blue-800 dark:text-blue-300 font-medium mb-1">{t('joinInvitePrompt')}</p>
+              <p className="font-mono text-lg tracking-wider text-blue-900 dark:text-blue-200 font-semibold">{inviteCode}</p>
+            </div>
           )}
 
           <button 

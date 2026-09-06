@@ -1,0 +1,16 @@
+{
+  "name": "amader-mess-notifications",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --test-scheduled",
+    "deploy": "wrangler deploy",
+    "types": "wrangler types src/env.d.ts --env-file .dev.vars.example",
+    "check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "~5.8.2",
+    "wrangler": "^4.0.0"
+  }
+}

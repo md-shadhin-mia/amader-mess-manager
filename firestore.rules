@@ -115,7 +115,7 @@ service cloud.firestore {
         || (isSignedIn()
           && request.auth.uid == userId
           && request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['name', 'phone', 'fcm_token', 'fcm_token_updated_at', 'current_mess_id', 'messes', 'updated_at']))
+            .hasOnly(['name', 'phone', 'photo_url', 'fcm_token', 'fcm_token_updated_at', 'current_mess_id', 'messes', 'updated_at']))
         // Legacy: a single-tenant manager may still edit other users until migration.
         || (isLegacyManager()
           && (!isLegacyPrimaryAdmin(userId) || request.resource.data.role == 'manager'));
@@ -151,7 +151,7 @@ service cloud.firestore {
       allow update: if isSuperAdmin()
         // Manager-editable settings. plan/status/member_limit/owner_uid are super-admin only.
         || (isManagerOf(messId)
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'timezone', 'join_code', 'updated_at']))
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'timezone', 'join_code', 'allow_half_meals', 'updated_at']))
         // Manager removes a member (member doc set to 'left' in the same batch).
         || (isManagerOf(messId)
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['member_count'])
@@ -190,7 +190,7 @@ service cloud.firestore {
           // Self: profile fields only.
           || (isSignedIn()
             && request.auth.uid == uid
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'phone', 'updated_at']))
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'phone', 'photo_url', 'updated_at']))
           // Rejoin after leaving, with the same checks as a fresh join.
           || (isSignedIn()
             && request.auth.uid == uid

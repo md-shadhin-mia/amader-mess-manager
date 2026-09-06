@@ -6,6 +6,7 @@ import { useToast } from '../../contexts/ToastContext';
 import { useMess } from '../../contexts/MessContext';
 import { messDoc } from '../../lib/paths';
 import { type MealType } from '../../lib/mealTypes';
+import { setMessHalfMeals } from '../../lib/mess';
 import { slugify } from '../../lib/labels';
 import { parseAmount } from '../../lib/numbers';
 
@@ -19,11 +20,29 @@ type Draft = { label_bn: string; label_en: string; weight: string };
 export default function MealTypeManager({ mealTypes }: Props) {
   const { t } = useLanguage();
   const { toast } = useToast();
-  const messId = useMess().messId ?? '';
+  const { messId: currentMessId, mess } = useMess();
+  const messId = currentMessId ?? '';
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const [adding, setAdding] = useState(false);
   const [newItem, setNewItem] = useState<Draft>({ label_bn: '', label_en: '', weight: '1' });
   const [busy, setBusy] = useState<string | null>(null);
+  const [togglingHalf, setTogglingHalf] = useState(false);
+
+  const allowHalfMeals = Boolean(mess?.allow_half_meals);
+
+  const handleToggleHalfMeals = async () => {
+    if (!messId) return;
+    setTogglingHalf(true);
+    try {
+      await setMessHalfMeals(db, messId, !allowHalfMeals);
+      toast(t('saved'));
+    } catch (err) {
+      console.error('Failed to toggle half meals', err);
+      toast(t('saveFailed'), { tone: 'error' });
+    } finally {
+      setTogglingHalf(false);
+    }
+  };
 
   const draftOf = (type: MealType): Draft => drafts[type.id] ?? { label_bn: type.label_bn, label_en: type.label_en, weight: String(type.weight) };
   const isDirty = (type: MealType) => {
@@ -110,6 +129,35 @@ export default function MealTypeManager({ mealTypes }: Props) {
         </button>
       </div>
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{t('mealTypesHint')}</p>
+
+      {/* Half meals configuration */}
+      <div className="mb-6 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-100 dark:border-gray-700 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors">
+        <div>
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t('allowHalfMeals')}</h3>
+            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+              allowHalfMeals
+                ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300'
+                : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300'
+            }`}>
+              {allowHalfMeals ? t('halfMealsEnabled') : t('halfMealsDisabled')}
+            </span>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t('allowHalfMealsHint')}</p>
+        </div>
+        <button
+          type="button"
+          onClick={handleToggleHalfMeals}
+          disabled={togglingHalf}
+          className={`shrink-0 px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
+            allowHalfMeals
+              ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700'
+              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+          } disabled:opacity-50`}
+        >
+          {togglingHalf ? t('loading') : allowHalfMeals ? t('halfMealsEnabled') : t('halfMealsDisabled')}
+        </button>
+      </div>
 
       {adding && (
         <form onSubmit={add} className="grid grid-cols-2 md:grid-cols-4 gap-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/60 rounded-lg p-4 mb-4">

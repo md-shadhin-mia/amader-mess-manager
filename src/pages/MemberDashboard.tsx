@@ -10,6 +10,7 @@ import { formatCount, formatTk } from '../lib/numbers';
 import ProfileModal from '../components/ProfileModal';
 import NotificationSettings from '../components/NotificationSettings';
 import ThemeToggle from '../components/ThemeToggle';
+import Avatar from '../components/Avatar';
 import { useState } from 'react';
 
 export default function MemberDashboard() {
@@ -30,9 +31,18 @@ export default function MemberDashboard() {
       {showProfile && <ProfileModal onClose={() => setShowProfile(false)} />}
 
       <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 sticky top-0 z-10 transition-colors">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t('memberPanel')}</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">{t('welcome')}, {userProfile?.name} · <Link to="/messes" className="text-blue-600 dark:text-blue-400 hover:underline">{mess?.name}</Link></p>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowProfile(true)}
+            className="hover:opacity-80 transition-opacity focus:outline-none"
+            title={t('editProfile')}
+          >
+            <Avatar name={userProfile?.name} photoUrl={userProfile?.photo_url} size="md" />
+          </button>
+          <div>
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t('memberPanel')}</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t('welcome')}, {userProfile?.name} · <Link to="/messes" className="text-blue-600 dark:text-blue-400 hover:underline">{mess?.name}</Link></p>
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <button onClick={() => navigate('/member/entry')} className="text-sm font-medium bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">{t('openEntry')}</button>

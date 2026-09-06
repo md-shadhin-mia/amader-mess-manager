@@ -16,6 +16,7 @@ import MonthReport from './pages/MonthReport';
 import MemberMonth from './pages/MemberMonth';
 import MonthLedger from './pages/MonthLedger';
 import YearOverview from './pages/YearOverview';
+import Join from './pages/Join';
 
 function Spinner() {
   return <div className="h-screen w-full flex items-center justify-center bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-200">Loading...</div>;
@@ -69,6 +70,7 @@ function AppRoutes() {
   return (
     <Routes key={messId ?? 'none'}>
       <Route path="/login" element={<Login />} />
+      <Route path="/join/:code" element={<Join />} />
       <Route path="/messes" element={<PrivateRoute requireMess={false}><Messes /></PrivateRoute>} />
       <Route path="/super" element={<PrivateRoute requireMess={false} superOnly><SuperAdmin /></PrivateRoute>} />
       <Route path="/admin" element={<PrivateRoute allowedRole="manager"><AdminDashboard /></PrivateRoute>} />
