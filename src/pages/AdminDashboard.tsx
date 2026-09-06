@@ -178,7 +178,7 @@ export default function AdminDashboard() {
     if (activeMonth) return toast(t('reopenBlockedActive'), { tone: 'error' });
     if (!confirm(`${t('reopenConfirm')} (${lastClosedMonth.month_id})`)) return;
     try {
-      await reopenMonth(db, messId, lastClosedMonth.id);
+      await reopenMonth(db, messId, lastClosedMonth.id, { currentMonthId: monthIdOf(), hasActiveMonth: Boolean(activeMonth), latestClosedMonthId: lastClosedMonth.id });
       toast(t('monthReopened'));
     } catch (err) {
       console.error('Reopen failed', err);
@@ -192,7 +192,7 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-gray-50 pb-12">
       {showProfile && <ProfileModal onClose={() => setShowProfile(false)} />}
       {showClose && activeMonth && userProfile && (
-        <CloseMonthDialog month={activeMonth} users={users} categories={categories} mealTypes={mealTypes} entries={entries} closedBy={userProfile.uid} onClose={() => setShowClose(false)} />
+        <CloseMonthDialog month={activeMonth} users={allMembers} categories={categories} mealTypes={mealTypes} entries={entries} closedBy={userProfile.uid} onClose={() => setShowClose(false)} />
       )}
 
       <header className="bg-blue-900 border-b border-blue-950 px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 sticky top-0 z-10 text-white">
@@ -207,6 +207,7 @@ export default function AdminDashboard() {
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <Link to="/admin/months" className="text-sm font-medium bg-blue-800 px-4 py-2 rounded hover:bg-blue-700 transition-colors">{t('monthReports')}</Link>
+          <Link to="/admin/reports" className="text-sm font-medium bg-blue-800 px-4 py-2 rounded hover:bg-blue-700 transition-colors">{t('yearOverview')}</Link>
           <button onClick={() => navigate('/member/entry')} className="text-sm font-medium bg-blue-800 px-4 py-2 rounded hover:bg-blue-700 transition-colors">{t('myMealEntry')}</button>
           <button onClick={() => setShowProfile(true)} className="text-sm font-medium text-blue-200 hover:text-white">{t('editProfile')}</button>
           <div className="bg-blue-950 rounded-lg p-1 flex">
@@ -224,7 +225,11 @@ export default function AdminDashboard() {
             <h2 className="text-lg font-medium text-gray-900 mb-1">{t('currentMonthStatus')}</h2>
             <p className="text-gray-500 text-sm">{activeMonth ? `${t('active')}: ${activeMonth.month_id}` : t('noActiveMonth')}</p>
             {activeMonth && (
-              <Link to={`/admin/months/${activeMonth.id}`} className="text-sm text-blue-600 hover:text-blue-800 font-medium">{t('viewReport')} →</Link>
+              <span className="text-sm font-medium">
+                <Link to={`/admin/months/${activeMonth.id}/edit`} className="text-blue-600 hover:text-blue-800">{t('editEntries')}</Link>
+                {' · '}
+                <Link to={`/admin/months/${activeMonth.id}`} className="text-blue-600 hover:text-blue-800">{t('viewReport')} →</Link>
+              </span>
             )}
           </div>
           <div className="flex flex-wrap gap-3">

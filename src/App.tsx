@@ -13,6 +13,8 @@ import MealEntry from './pages/MealEntry';
 import MonthsList from './pages/MonthsList';
 import MonthReport from './pages/MonthReport';
 import MemberMonth from './pages/MemberMonth';
+import MonthLedger from './pages/MonthLedger';
+import YearOverview from './pages/YearOverview';
 
 function Spinner() {
   return <div className="h-screen w-full flex items-center justify-center">Loading...</div>;
@@ -71,6 +73,8 @@ function AppRoutes() {
       <Route path="/admin" element={<PrivateRoute allowedRole="manager"><AdminDashboard /></PrivateRoute>} />
       <Route path="/admin/months" element={<PrivateRoute allowedRole="manager"><MonthsList /></PrivateRoute>} />
       <Route path="/admin/months/:monthId" element={<PrivateRoute allowedRole="manager"><MonthReport /></PrivateRoute>} />
+      <Route path="/admin/months/:monthId/edit" element={<PrivateRoute allowedRole="manager"><MonthLedger /></PrivateRoute>} />
+      <Route path="/admin/reports" element={<PrivateRoute allowedRole="manager"><YearOverview /></PrivateRoute>} />
       <Route path="/member" element={<PrivateRoute allowedRole="member"><MemberDashboard /></PrivateRoute>} />
       <Route path="/member/entry" element={<PrivateRoute allowedRole="member"><MealEntry /></PrivateRoute>} />
       <Route path="/member/months" element={<PrivateRoute allowedRole="member"><MemberMonth /></PrivateRoute>} />

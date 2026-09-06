@@ -73,7 +73,9 @@ export default function MonthReport() {
         {month && totals && (
           <>
             <div className="flex flex-wrap items-center gap-2 text-sm">
-              {mode === 'live' && <span className="px-2 py-1 rounded bg-green-100 text-green-800 font-medium">{t('preview')}</span>}
+              {mode === 'live' && month.status === 'backfill' && <span className="px-2 py-1 rounded bg-amber-100 text-amber-800 font-medium">{t('backfillBadge')}</span>}
+              {mode === 'live' && month.status !== 'backfill' && <span className="px-2 py-1 rounded bg-green-100 text-green-800 font-medium">{t('preview')}</span>}
+              {mode === 'live' && <Link to={`/admin/months/${month.id}/edit`} className="text-blue-600 hover:text-blue-800 font-medium print:hidden">{t('editEntries')} →</Link>}
               {mode === 'closed' && <span className="px-2 py-1 rounded bg-gray-200 text-gray-800 font-medium">{t('closed')}</span>}
               {mode === 'legacy' && <span className="px-2 py-1 rounded bg-amber-100 text-amber-800">{t('legacyMonthHint')}</span>}
             </div>

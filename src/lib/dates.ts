@@ -38,3 +38,26 @@ export function formatDateId(dateId: string, pattern = 'd MMM'): string {
 export function formatMonthId(monthId: string, pattern = 'MMMM yyyy'): string {
   return format(parse(`${monthId}-01`, 'yyyy-MM-dd', new Date()), pattern);
 }
+
+/** Every day id of a month, in order. */
+export function daysOfMonth(monthId: string): string[] {
+  const { start, end } = monthRange(monthId);
+  const days: string[] = [];
+  let current = start;
+  while (current <= end) {
+    days.push(current);
+    current = shiftDateId(current, 1);
+  }
+  return days;
+}
+
+/** The `count` month ids before the month containing `from`, newest first. */
+export function previousMonthIds(count: number, from = new Date()): string[] {
+  const ids: string[] = [];
+  const cursor = new Date(from.getFullYear(), from.getMonth(), 1);
+  for (let i = 0; i < count; i++) {
+    cursor.setMonth(cursor.getMonth() - 1);
+    ids.push(monthIdOf(cursor));
+  }
+  return ids;
+}

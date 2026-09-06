@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { serverTimestamp, setDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { useMess } from '../../contexts/MessContext';
-import { mealDocId, messDoc } from '../../lib/paths';
+import { upsertMealDay } from '../../lib/ledger';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useToast } from '../../contexts/ToastContext';
 import type { MealDoc } from '../../hooks/useMonthEntries';
@@ -50,20 +49,13 @@ export default function MealTypeRow({ uid, date, mealTypes, current, disabled }:
     setSaving(typeId);
     const previous = { ...currentMeals };
     try {
-      await setDoc(
-        messDoc(db, messId, 'daily_meals', mealDocId(uid, date)),
-        { date, user_id: uid, meals: next, meal_count: mealCountOf(next, mealTypes), updated_at: serverTimestamp(), timestamp: serverTimestamp() },
-        { merge: true },
-      );
+      // Full-document write (no merge) so a meal type set back to 0 really disappears.
+      await upsertMealDay(db, messId, uid, date, next, mealTypes);
       toast(t('mealSaved'), {
         action: {
           label: t('undo'),
           onClick: () => {
-            void setDoc(
-              messDoc(db, messId, 'daily_meals', mealDocId(uid, date)),
-              { date, user_id: uid, meals: previous, meal_count: mealCountOf(previous, mealTypes), updated_at: serverTimestamp() },
-              { merge: true },
-            );
+            void upsertMealDay(db, messId, uid, date, previous, mealTypes);
           },
         },
       });

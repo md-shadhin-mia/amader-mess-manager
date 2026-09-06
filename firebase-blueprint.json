@@ -50,8 +50,10 @@
           "type": "string",
           "enum": [
             "active",
-            "closed"
-          ]
+            "closed",
+            "backfill"
+          ],
+          "description": "backfill = past month being entered by the manager; members cannot write into it"
         },
         "fixed_costs": {
           "type": "object",
@@ -108,6 +110,17 @@
         },
         "settlement_version": {
           "type": "number"
+        },
+        "rent_source": {
+          "type": "string",
+          "enum": [
+            "profile",
+            "month"
+          ],
+          "description": "month = rent comes from member_costs.room_rent (back-filled months)"
+        },
+        "advance_applied": {
+          "type": "boolean"
         }
       },
       "required": [

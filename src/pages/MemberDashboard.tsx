@@ -57,7 +57,7 @@ export default function MemberDashboard() {
         <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-medium text-gray-900">{t('thisMonth')} {activeMonth && <span className="text-gray-400 font-normal">· {formatMonthId(activeMonth.id)}</span>}</h2>
-            {activeMonth && <Link to={`/member/months/${activeMonth.id}`} className="text-sm font-medium text-blue-600 hover:text-blue-800">{t('breakdown')} →</Link>}
+            {activeMonth && activeMonth.status === 'active' && <Link to={`/member/months/${activeMonth.id}`} className="text-sm font-medium text-blue-600 hover:text-blue-800">{t('breakdown')} →</Link>}
           </div>
           {!activeMonth ? (
             <p className="text-sm text-gray-500">{t('noActiveMonth')}</p>

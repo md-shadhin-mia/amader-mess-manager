@@ -23,7 +23,9 @@ export default function MemberMonth() {
   const { member: userProfile } = useMess();
   const { t, lang } = useLanguage();
   const navigate = useNavigate();
-  const { months } = useMonths();
+  const { months: allMonths } = useMonths();
+  // Back-fill months are manager work in progress; members only see active and closed ones.
+  const months = allMonths.filter((m) => m.status !== 'backfill');
 
   const monthId = paramMonth || months.find((m) => m.status === 'active')?.id || months[0]?.id || null;
   const { month, mode, rows, categories, mealTypes, totals, loading } = useMonthSettlement(monthId, { onlyUid: userProfile?.uid });

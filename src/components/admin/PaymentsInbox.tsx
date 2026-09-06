@@ -1,8 +1,9 @@
 import { useState, type FormEvent } from 'react';
-import { addDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { serverTimestamp, updateDoc } from 'firebase/firestore';
+import { recordManagerPayment } from '../../lib/ledger';
 import { db } from '../../firebase';
 import { useMess } from '../../contexts/MessContext';
-import { messCol, messDoc } from '../../lib/paths';
+import { messDoc } from '../../lib/paths';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useToast } from '../../contexts/ToastContext';
 import { usePendingPayments, type PaymentDoc, type PaymentPurpose } from '../../hooks/useMonthEntries';
@@ -60,18 +61,7 @@ export default function PaymentsInbox({ users, managerUid, monthPayments }: Prop
     }
     setBusy('new');
     try {
-      await addDoc(messCol(db, messId, 'payments'), {
-        date: form.date,
-        user_id: form.user_id,
-        amount,
-        purpose: form.purpose,
-        status: 'confirmed',
-        note: form.note.trim(),
-        recorded_by: managerUid,
-        confirmed_by: managerUid,
-        confirmed_at: serverTimestamp(),
-        timestamp: serverTimestamp(),
-      });
+      await recordManagerPayment(db, messId, managerUid, { date: form.date, user_id: form.user_id, amount, purpose: form.purpose, note: form.note });
       setForm({ ...form, amount: '', note: '' });
       toast(t('paymentRecorded'));
     } catch (err) {

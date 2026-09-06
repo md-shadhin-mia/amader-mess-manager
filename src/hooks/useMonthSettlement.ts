@@ -13,6 +13,7 @@ import { buildSettlementInput } from '../lib/closeMonth';
 import { sortCategories, type CostCategory } from '../lib/costCategories';
 import type { MealType } from '../lib/mealTypes';
 import { computeSettlement, type SettlementCategory, type SettlementResult, type SettlementRow } from '../lib/settlement';
+import { isMonthEditable } from '../lib/monthLogic';
 
 export type SettlementMode = 'live' | 'closed' | 'legacy' | 'missing';
 
@@ -42,7 +43,7 @@ export function useMonthSettlement(monthId: string | null, options: { onlyUid?: 
   const { messId } = useMess();
   const { months, loading: monthsLoading } = useMonths();
   const month = monthId ? months.find((m) => m.id === monthId) ?? null : null;
-  const isActive = month?.status === 'active';
+  const isActive = isMonthEditable(month);
   const isClosed = month?.status === 'closed';
   const hasRows = isClosed && Boolean(month?.settlement_version);
 
