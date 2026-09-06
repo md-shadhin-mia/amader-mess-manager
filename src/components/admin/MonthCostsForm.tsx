@@ -7,7 +7,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useToast } from '../../contexts/ToastContext';
 import type { MonthDoc } from '../../hooks/useMonths';
 import type { MemberDoc } from '../../hooks/useMembers';
-import { isSharedAmountCategory, type CostCategory } from '../../lib/costCategories';
+import { isSharedAmountCategory, ROOM_RENT_CATEGORY_ID, type CostCategory } from '../../lib/costCategories';
 import { labelOf } from '../../lib/labels';
 import { formatTk, parseAmount } from '../../lib/numbers';
 
@@ -39,18 +39,23 @@ export default function MonthCostsForm({ month, categories, users }: Props) {
 
   const active = categories.filter((c) => c.active);
   const shared = active.filter(isSharedAmountCategory);
-  const perMember = active.filter((c) => c.split_rule === 'per_member' && !c.builtin);
-  const rentCategory = active.find((c) => c.builtin === 'room_rent');
+  const rentFromMonth = month.rent_source === 'month';
+  // For back-filled months the rent lives on the month itself and is edited here.
+  const perMember = active.filter((c) => c.split_rule === 'per_member' && (!c.builtin || rentFromMonth));
+  const rentCategory = rentFromMonth ? undefined : active.find((c) => c.builtin === 'room_rent');
 
   useEffect(() => {
     setFixed(Object.fromEntries(Object.entries(month.fixed_costs || {}).map(([k, v]) => [k, String(v ?? 0)])));
-    setMemberCosts(
-      Object.fromEntries(
-        Object.entries(month.member_costs || {}).map(([cat, byUid]) => [cat, Object.fromEntries(Object.entries(byUid || {}).map(([uid, v]) => [uid, String(v ?? 0)]))]),
-      ),
+    const costs = Object.fromEntries(
+      Object.entries(month.member_costs || {}).map(([cat, byUid]) => [cat, Object.fromEntries(Object.entries(byUid || {}).map(([uid, v]) => [uid, String(v ?? 0)]))]),
     );
+    if (month.rent_source === 'month' && !costs[ROOM_RENT_CATEGORY_ID]) {
+      costs[ROOM_RENT_CATEGORY_ID] = Object.fromEntries(users.map((u) => [u.uid, String(Number(u.room_rent) || 0)]));
+    }
+    setMemberCosts(costs);
     setWeights({ ...(month.member_weights || {}) });
-  }, [month.id, month.fixed_costs, month.member_costs, month.member_weights]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [month.id, month.fixed_costs, month.member_costs, month.member_weights, month.rent_source]);
 
   const sharedTotal = shared.reduce((sum, c) => sum + (parseAmount(fixed[c.id] ?? '') ?? 0), 0);
   const perMemberTotal = perMember.reduce((sum, c) => sum + users.reduce((s, u) => s + (parseAmount(memberCosts[c.id]?.[u.uid] ?? '') ?? 0), 0), 0);
@@ -83,7 +88,7 @@ export default function MonthCostsForm({ month, categories, users }: Props) {
   return (
     <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
       <h2 className="text-lg font-medium text-gray-900 mb-1">{t('monthlyCosts')} · {month.month_id}</h2>
-      <p className="text-sm text-gray-500 mb-4">{t('monthlyCostsHint')}</p>
+      <p className="text-sm text-gray-500 mb-4">{rentFromMonth ? t('monthlyCostsHintBackfill') : t('monthlyCostsHint')}</p>
 
       <form onSubmit={save} className="space-y-6">
         <div>
@@ -128,7 +133,10 @@ export default function MonthCostsForm({ month, categories, users }: Props) {
                 <tbody>
                   {users.map((u) => (
                     <tr key={u.uid} className="border-b border-gray-100 last:border-0">
-                      <td className="p-2 text-gray-900 font-medium whitespace-nowrap">{u.name}</td>
+                      <td className="p-2 text-gray-900 font-medium whitespace-nowrap">
+                        {u.name}
+                        {u.status === 'left' && <span className="ml-1 text-xs text-gray-400">({t('leftTag')})</span>}
+                      </td>
                       <td className="p-2">
                         <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden">
                           {WEIGHTS.map((w) => (

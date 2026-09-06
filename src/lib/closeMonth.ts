@@ -1,39 +1,20 @@
-import { deleteField, getDoc, getDocs, query, serverTimestamp, where, writeBatch, type Firestore } from 'firebase/firestore';
+import { deleteField, getDoc, getDocs, query, serverTimestamp, setDoc, where, writeBatch, type Firestore } from 'firebase/firestore';
 import { monthRange } from './dates';
 import { memberRef, messCol, messDoc, settlementRef, settlementsCol, type TenantCollection } from './paths';
-import { ROOM_RENT_CATEGORY_ID, type CostCategory } from './costCategories';
+import type { CostCategory } from './costCategories';
+import { backfillMonthDoc, canReopen, decideReopenStatus, effectiveMemberCosts, effectiveMemberWeights, isMonthEditable, type MemberLike, type MonthStatus } from './monthLogic';
+
+export { effectiveMemberCosts, isMonthEditable } from './monthLogic';
+export type { MemberLike } from './monthLogic';
 import type { MealType } from './mealTypes';
 import { computeSettlement, SETTLEMENT_VERSION, type SettlementInput, type SettlementResult } from './settlement';
 import type { MonthDoc } from '../hooks/useMonths';
 import type { ExpenseDoc, MealDoc, PaymentDoc } from '../hooks/useMonthEntries';
 
-export interface MemberLike {
-  uid: string;
-  name: string;
-  advance_balance?: number;
-  room_rent?: number;
-  /** Members who left keep their history but get no share of equal-split costs by default. */
-  status?: 'active' | 'left';
-}
-
 export interface EntryBundle {
   meals: MealDoc[];
   expenses: ExpenseDoc[];
   payments: PaymentDoc[];
-}
-
-/** Per-member amounts for per_member categories, with the built-in rent taken from user profiles. */
-export function effectiveMemberCosts(month: Pick<MonthDoc, 'member_costs'>, users: MemberLike[], categories: CostCategory[]): Record<string, Record<string, number>> {
-  const result: Record<string, Record<string, number>> = {};
-  for (const category of categories) {
-    if (category.split_rule !== 'per_member') continue;
-    if (category.builtin === 'room_rent' || category.id === ROOM_RENT_CATEGORY_ID) {
-      result[category.id] = Object.fromEntries(users.map((user) => [user.uid, Number(user.room_rent) || 0]));
-    } else {
-      result[category.id] = { ...(month.member_costs?.[category.id] || {}) };
-    }
-  }
-  return result;
 }
 
 /** Assembles the pure settlement input from live documents (used for both preview and close). */
@@ -62,10 +43,7 @@ export function buildSettlementInput(args: {
     mealTypes: mealTypes.map((type) => ({ id: type.id, weight: type.weight })),
     fixedCosts: month.fixed_costs || {},
     memberCosts: effectiveMemberCosts(month, users, categories),
-    memberWeights: {
-      ...Object.fromEntries(users.filter((user) => user.status === 'left').map((user) => [user.uid, 0])),
-      ...(month.member_weights || {}),
-    },
+    memberWeights: effectiveMemberWeights(month, users),
     meals: entries.meals,
     expenses: entries.expenses,
     payments: entries.payments,
@@ -73,7 +51,7 @@ export function buildSettlementInput(args: {
   };
 }
 
-async function fetchMonthEntries(db: Firestore, messId: string, monthId: string): Promise<EntryBundle> {
+export async function fetchMonthEntries(db: Firestore, messId: string, monthId: string): Promise<EntryBundle> {
   const range = monthRange(monthId);
   const load = async <T,>(name: TenantCollection): Promise<T[]> => {
     const snap = await getDocs(query(messCol(db, messId, name), where('date', '>=', range.start), where('date', '<=', range.end)));
@@ -84,7 +62,7 @@ async function fetchMonthEntries(db: Firestore, messId: string, monthId: string)
 }
 
 export class MonthCloseError extends Error {
-  constructor(public code: 'NOT_ACTIVE' | 'BLOCKING_WARNINGS', message: string, public warnings: string[] = []) {
+  constructor(public code: 'NOT_ACTIVE' | 'BLOCKING_WARNINGS' | 'ADVANCE_LOCKED' | 'EXISTS', message: string, public warnings: string[] = []) {
     super(message);
   }
 }
@@ -103,8 +81,8 @@ export async function closeMonth(
   const monthRef = messDoc(db, args.messId, 'months', args.monthId);
   const monthSnap = await getDoc(monthRef);
   const month = { id: monthSnap.id, ...(monthSnap.data() as Omit<MonthDoc, 'id'>) };
-  if (!monthSnap.exists() || month.status !== 'active') {
-    throw new MonthCloseError('NOT_ACTIVE', 'This month is not active.');
+  if (!monthSnap.exists() || !isMonthEditable(month)) {
+    throw new MonthCloseError('NOT_ACTIVE', 'This month is not open for entry.');
   }
 
   const entries = await fetchMonthEntries(db, args.messId, args.monthId);
@@ -150,12 +128,25 @@ export async function closeMonth(
   return result;
 }
 
-/** Reverts a close: restores advances, deletes settlement rows and reactivates the month. */
-export async function reopenMonth(db: Firestore, messId: string, monthId: string): Promise<void> {
+/**
+ * Reverts a close: restores advances, deletes settlement rows and reopens the
+ * month as 'active' (current month, nothing else active) or 'backfill'.
+ * Months that applied advances can only be reopened while they are the most
+ * recently closed month; otherwise the advance restore would be wrong.
+ */
+export async function reopenMonth(
+  db: Firestore,
+  messId: string,
+  monthId: string,
+  context: { currentMonthId: string; hasActiveMonth: boolean; latestClosedMonthId: string | null },
+): Promise<MonthStatus> {
   const monthRef = messDoc(db, messId, 'months', monthId);
   const monthSnap = await getDoc(monthRef);
   const month = monthSnap.data() as (Omit<MonthDoc, 'id'> & { advance_applied?: boolean }) | undefined;
-  if (!month || month.status !== 'closed') throw new MonthCloseError('NOT_ACTIVE', 'This month is not closed.');
+  if (!month) throw new MonthCloseError('NOT_ACTIVE', 'This month does not exist.');
+  const check = canReopen({ id: monthId, status: month.status, advance_applied: month.advance_applied }, context.latestClosedMonthId);
+  if (!check.ok) throw new MonthCloseError(check.reason === 'ADVANCE_LOCKED' ? 'ADVANCE_LOCKED' : 'NOT_ACTIVE', 'This month cannot be reopened.');
+  const nextStatus = decideReopenStatus({ monthId, currentMonthId: context.currentMonthId, hasActiveMonth: context.hasActiveMonth });
 
   const settlements = await getDocs(settlementsCol(db, messId, monthId));
   const batch = writeBatch(db);
@@ -168,7 +159,7 @@ export async function reopenMonth(db: Firestore, messId: string, monthId: string
     batch.delete(row.ref);
   }
   batch.update(monthRef, {
-    status: 'active',
+    status: nextStatus,
     closed_at: deleteField(),
     closed_by: deleteField(),
     grand: deleteField(),
@@ -176,4 +167,15 @@ export async function reopenMonth(db: Firestore, messId: string, monthId: string
     advance_applied: deleteField(),
   });
   await batch.commit();
+  return nextStatus;
+}
+
+/** Creates a past month for manager back-fill. Fails if the month already exists. */
+export async function createBackfillMonth(
+  db: Firestore,
+  args: { messId: string; monthId: string; members: MemberLike[]; previous?: Pick<MonthDoc, 'fixed_costs' | 'member_costs'> | null },
+): Promise<void> {
+  const ref = messDoc(db, args.messId, 'months', args.monthId);
+  if ((await getDoc(ref)).exists()) throw new MonthCloseError('EXISTS', 'This month already exists.');
+  await setDoc(ref, { ...backfillMonthDoc({ monthId: args.monthId, members: args.members, previous: args.previous }), timestamp: serverTimestamp() });
 }

@@ -3,12 +3,19 @@ import { db } from '../firebase';
 import { useMess } from '../contexts/MessContext';
 import { messCol } from '../lib/paths';
 import type { SettlementCategory, SettlementMealType } from '../lib/settlement';
+import type { MonthStatus, RentSource } from '../lib/monthLogic';
 import { useCollection } from './useCollection';
+
+export { isMonthEditable } from '../lib/monthLogic';
+export type { MonthStatus } from '../lib/monthLogic';
 
 export interface MonthDoc {
   id: string;
   month_id: string;
-  status: 'active' | 'closed';
+  status: MonthStatus;
+  /** 'month' means rent comes from member_costs.room_rent (back-filled months); default: current profiles. */
+  rent_source?: RentSource;
+  advance_applied?: boolean;
   fixed_costs?: Record<string, number>;
   member_costs?: Record<string, Record<string, number>>;
   member_weights?: Record<string, number>;

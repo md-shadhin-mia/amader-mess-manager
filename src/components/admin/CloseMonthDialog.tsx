@@ -30,7 +30,8 @@ export default function CloseMonthDialog({ month, users, categories, mealTypes, 
   const { toast } = useToast();
   const { messId } = useMess();
   const navigate = useNavigate();
-  const [applyAdvance, setApplyAdvance] = useState(true);
+  // Applying a months-old settlement against today's advance balance would corrupt it.
+  const [applyAdvance, setApplyAdvance] = useState(month.status !== 'backfill');
   const [busy, setBusy] = useState(false);
 
   const preview = useMemo(
@@ -87,7 +88,7 @@ export default function CloseMonthDialog({ month, users, categories, mealTypes, 
             <input type="checkbox" checked={applyAdvance} onChange={(e) => setApplyAdvance(e.target.checked)} className="mt-1" />
             <span>
               <span className="font-medium text-gray-800">{t('applyAdvance')}</span>
-              <span className="block text-gray-500">{t('applyAdvanceHint')}</span>
+              <span className="block text-gray-500">{month.status === 'backfill' ? t('applyAdvanceBackfillHint') : t('applyAdvanceHint')}</span>
             </span>
           </label>
 
