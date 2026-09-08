@@ -4,8 +4,12 @@ import { getApp } from 'firebase/app';
 import { auth, db } from './firebase';
 import { userRef } from './lib/paths';
 
-const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY;
-export const PUSH_WORKER_URL = (import.meta.env.VITE_PUSH_WORKER_URL || '').replace(/\/$/, '');
+const VAPID_KEY =
+  import.meta.env.VITE_FIREBASE_VAPID_KEY ||
+  'BLF0plxm5MAgzrV66daoBIQSpx0_gA64UxiUwDNpBKlxoVuGQWtVphKu676S3Hwq0-uZo7msMKCFxxM0PAKz9Io';
+export const PUSH_WORKER_URL = (
+  import.meta.env.VITE_PUSH_WORKER_URL || 'https://mess-push.mshadhinkn.workers.dev'
+).replace(/\/$/, '');
 
 export type PushStatus = 'unsupported' | 'not-configured' | 'denied' | 'enabled' | 'disabled';
 

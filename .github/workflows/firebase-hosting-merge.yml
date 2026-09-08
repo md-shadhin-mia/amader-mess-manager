@@ -27,6 +27,9 @@ jobs:
       - run: bun run lint
       - run: bun run test
       - run: bun run build
+        env:
+          VITE_FIREBASE_VAPID_KEY: ${{ secrets.VITE_FIREBASE_VAPID_KEY || 'BLF0plxm5MAgzrV66daoBIQSpx0_gA64UxiUwDNpBKlxoVuGQWtVphKu676S3Hwq0-uZo7msMKCFxxM0PAKz9Io' }}
+          VITE_PUSH_WORKER_URL: ${{ secrets.VITE_PUSH_WORKER_URL || 'https://mess-push.mshadhinkn.workers.dev' }}
 
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
