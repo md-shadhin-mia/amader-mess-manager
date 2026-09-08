@@ -51,14 +51,32 @@ export async function enablePushNotifications(uid: string): Promise<string> {
   return token;
 }
 
-/** Shows pushes that arrive while the app tab is in the foreground. */
 export async function listenForForegroundPushes(onPush: (title: string, body: string) => void) {
   const messaging = await messagingOrNull();
   if (!messaging) return () => {};
   return onMessage(messaging, (payload) => {
     const title = payload.notification?.title || payload.data?.title;
     const body = payload.notification?.body || payload.data?.body || '';
-    if (title) onPush(title, body);
+    if (title) {
+      if (typeof Notification !== 'undefined' && Notification.permission === 'granted' && 'serviceWorker' in navigator) {
+        void navigator.serviceWorker.ready.then((reg) => {
+          reg.showNotification(title, {
+            body,
+            icon: '/icon.svg',
+            badge: '/icon.svg',
+            tag: payload.data?.tag || 'mess-manager',
+            data: { url: payload.data?.url || '/' },
+          });
+        }).catch(() => {
+          try {
+            new Notification(title, { body, icon: '/icon.svg' });
+          } catch {
+            // ignore
+          }
+        });
+      }
+      onPush(title, body);
+    }
   });
 }
 

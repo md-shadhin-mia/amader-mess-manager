@@ -20,9 +20,12 @@ const messaging = firebase.messaging();
 // Notification messages are displayed by the browser automatically.
 messaging.onBackgroundMessage((payload) => {
   const data = payload.data || {};
-  if (!data.title) return;
-  self.registration.showNotification(data.title, {
-    body: data.body || '',
+  const notification = payload.notification || {};
+  const title = notification.title || data.title;
+  const body = notification.body || data.body || '';
+  if (!title) return;
+  self.registration.showNotification(title, {
+    body,
     icon: '/icon.svg',
     badge: '/icon.svg',
     tag: data.tag || 'mess-manager',
