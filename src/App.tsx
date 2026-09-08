@@ -9,6 +9,10 @@ import Login from './pages/Login';
 import Messes from './pages/Messes';
 import SuperAdmin from './pages/SuperAdmin';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminMembers from './pages/AdminMembers';
+import AdminPayments from './pages/AdminPayments';
+import AdminCosts from './pages/AdminCosts';
+import AdminSettings from './pages/AdminSettings';
 import MemberDashboard from './pages/MemberDashboard';
 import MealEntry from './pages/MealEntry';
 import MonthsList from './pages/MonthsList';
@@ -74,6 +78,10 @@ function AppRoutes() {
       <Route path="/messes" element={<PrivateRoute requireMess={false}><Messes /></PrivateRoute>} />
       <Route path="/super" element={<PrivateRoute requireMess={false} superOnly><SuperAdmin /></PrivateRoute>} />
       <Route path="/admin" element={<PrivateRoute allowedRole="manager"><AdminDashboard /></PrivateRoute>} />
+      <Route path="/admin/members" element={<PrivateRoute allowedRole="manager"><AdminMembers /></PrivateRoute>} />
+      <Route path="/admin/payments" element={<PrivateRoute allowedRole="manager"><AdminPayments /></PrivateRoute>} />
+      <Route path="/admin/costs" element={<PrivateRoute allowedRole="manager"><AdminCosts /></PrivateRoute>} />
+      <Route path="/admin/settings" element={<PrivateRoute allowedRole="manager"><AdminSettings /></PrivateRoute>} />
       <Route path="/admin/months" element={<PrivateRoute allowedRole="manager"><MonthsList /></PrivateRoute>} />
       <Route path="/admin/months/:monthId" element={<PrivateRoute allowedRole="manager"><MonthReport /></PrivateRoute>} />
       <Route path="/admin/months/:monthId/edit" element={<PrivateRoute allowedRole="manager"><MonthLedger /></PrivateRoute>} />

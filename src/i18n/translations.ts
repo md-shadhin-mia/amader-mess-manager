@@ -355,7 +355,20 @@ export const translations = {
     linkCopied: 'যোগদানের লিংক কপি করা হয়েছে!',
     joinInvitePrompt: 'আপনাকে এই মেসে যোগ দেওয়ার জন্য আমন্ত্রণ জানানো হয়েছে।',
     joiningMess: 'মেসে যোগ দেওয়া হচ্ছে...',
-    signInToJoin: 'সরাসরি যোগ দিতে সাইন ইন করুন'
+    signInToJoin: 'সরাসরি যোগ দিতে সাইন ইন করুন',
+    adminOverview: 'ড্যাশবোর্ড',
+    adminMembers: 'সদস্য ও ভাড়া',
+    adminPayments: 'পেমেন্ট ইনবক্স',
+    adminCosts: 'মাসের খরচ',
+    adminSettings: 'সেটিংস',
+    quickActions: 'কাজের মেনু',
+    activeMembers: 'সক্রিয় সদস্য',
+    searchMember: 'নাম, ফোন বা ইমেইল দিয়ে সদস্য খুঁজুন...',
+    seatsOccupied: 'আসন সংখ্যা',
+    manageMembersHint: 'সদস্যদের ভূমিকা, রুম ভাড়া ও উপস্থিতি পরিচালনা করুন।',
+    paymentsInboxHint: 'সদস্যদের পাঠানো ডিপোজিট ও এডভান্স পেমেন্ট যাচাই করে অনুমোদন দিন।',
+    monthCostsHint: 'চলতি মাসের মেসের স্থায়ী ও সদস্যভিত্তিক খরচসমূহ নির্ধারণ করুন।',
+    messSettingsPageHint: 'মেসের নাম, টাইমজোন, খরচের খাত ও মিলের অনুপাত কনফিগার করুন।'
   },
   en: {
     appTitle: 'Mess Manager',
@@ -713,7 +726,20 @@ export const translations = {
     linkCopied: 'Join link copied to clipboard!',
     joinInvitePrompt: 'You have been invited to join this mess.',
     joiningMess: 'Joining mess...',
-    signInToJoin: 'Sign in to join directly'
+    signInToJoin: 'Sign in to join directly',
+    adminOverview: 'Dashboard',
+    adminMembers: 'Members & Rent',
+    adminPayments: 'Payments Inbox',
+    adminCosts: 'Month Costs',
+    adminSettings: 'Settings',
+    quickActions: 'Quick Menu',
+    activeMembers: 'Active Members',
+    searchMember: 'Search member by name, phone or email...',
+    seatsOccupied: 'Seats Occupancy',
+    manageMembersHint: 'Manage member roles, room rents, and mess roster.',
+    paymentsInboxHint: 'Review and approve member deposits and advance payments.',
+    monthCostsHint: 'Set fixed and per-member variable costs for the active month.',
+    messSettingsPageHint: 'Configure mess name, timezone, cost categories, and meal weights.'
   }
 };
 
