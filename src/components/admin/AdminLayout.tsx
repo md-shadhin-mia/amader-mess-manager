@@ -12,7 +12,7 @@ import { usePendingPayments } from '../../hooks/useMonthEntries';
 
 interface AdminLayoutProps {
   children: ReactNode;
-  activeTab?: 'overview' | 'members' | 'payments' | 'costs' | 'settings' | 'months' | 'reports';
+  activeTab?: 'overview' | 'members' | 'notices' | 'payments' | 'costs' | 'settings' | 'months' | 'reports';
   title?: string;
   subtitle?: string;
   action?: ReactNode;
@@ -37,6 +37,7 @@ export default function AdminLayout({
   const currentTab = activeTab ?? (
     location.pathname === '/admin' ? 'overview' :
     location.pathname.startsWith('/admin/members') ? 'members' :
+    location.pathname.startsWith('/admin/notices') ? 'notices' :
     location.pathname.startsWith('/admin/payments') ? 'payments' :
     location.pathname.startsWith('/admin/costs') ? 'costs' :
     location.pathname.startsWith('/admin/settings') ? 'settings' :
@@ -62,6 +63,16 @@ export default function AdminLayout({
       icon: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+      ),
+    },
+    {
+      id: 'notices',
+      path: '/admin/notices',
+      label: 'নোটিশ বোর্ড',
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
         </svg>
       ),
     },

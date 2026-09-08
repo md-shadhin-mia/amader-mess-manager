@@ -151,7 +151,13 @@ service cloud.firestore {
       allow update: if isSuperAdmin()
         // Manager-editable settings. plan/status/member_limit/owner_uid are super-admin only.
         || (isManagerOf(messId)
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'timezone', 'join_code', 'allow_half_meals', 'updated_at']))
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'name', 'timezone', 'join_code', 'allow_half_meals',
+            'lunch_reminder_time', 'lunch_reminder_enabled',
+            'dinner_reminder_time', 'dinner_reminder_enabled',
+            'bazar_reminder_time', 'bazar_reminder_enabled',
+            'updated_at'
+          ]))
         // Manager removes a member (member doc set to 'left' in the same batch).
         || (isManagerOf(messId)
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['member_count'])
@@ -256,6 +262,16 @@ service cloud.firestore {
             && request.resource.data.user_id == resource.data.user_id
             && memberEntryWrite(messId, request.resource.data.date));
         allow delete: if managerWrite(messId) || (ownsExisting() && resource.data.status == 'pending');
+      }
+
+      match /notices/{noticeId} {
+        allow read: if canRead(messId);
+        allow create, update, delete: if managerWrite(messId);
+      }
+
+      match /notification_runs/{runId} {
+        allow read: if canRead(messId);
+        allow write: if isSuperAdmin();
       }
     }
 

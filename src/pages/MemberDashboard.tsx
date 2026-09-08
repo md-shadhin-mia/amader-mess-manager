@@ -11,6 +11,7 @@ import ProfileModal from '../components/ProfileModal';
 import NotificationSettings from '../components/NotificationSettings';
 import ThemeToggle from '../components/ThemeToggle';
 import Avatar from '../components/Avatar';
+import NoticeBoardWidget from '../components/NoticeBoardWidget';
 import { useState } from 'react';
 
 export default function MemberDashboard() {
@@ -58,6 +59,8 @@ export default function MemberDashboard() {
       </header>
 
       <main className="max-w-4xl mx-auto p-6 space-y-6">
+        <NoticeBoardWidget />
+
         <section className="bg-blue-600 text-white p-6 rounded-xl shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-lg font-semibold">{t('mealEntryPage')}</h2>

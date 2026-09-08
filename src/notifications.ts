@@ -93,11 +93,38 @@ export async function sendTestPush(): Promise<{ ok: boolean; message: string }> 
   const user = auth.currentUser;
   if (!user) return { ok: false, message: 'not-signed-in' };
 
-  const idToken = await user.getIdToken();
-  const response = await fetch(`${PUSH_WORKER_URL}/test`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${idToken}` },
-  });
-  const body = (await response.json().catch(() => ({}))) as { message?: string; error?: string };
-  return { ok: response.ok, message: body.message || body.error || response.statusText };
+  try {
+    const idToken = await user.getIdToken();
+    const response = await fetch(`${PUSH_WORKER_URL}/test`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${idToken}` },
+    });
+    const data = (await response.json()) as { ok?: boolean; message?: string };
+    return { ok: Boolean(data.ok), message: data.message || (data.ok ? 'Sent' : 'Failed') };
+  } catch (err) {
+    return { ok: false, message: String(err instanceof Error ? err.message : err) };
+  }
+}
+
+export async function broadcastNoticePush(params: {
+  messId: string;
+  id?: string;
+  title: string;
+  content: string;
+  priority?: string;
+}): Promise<{ ok: boolean; message?: string }> {
+  if (!PUSH_WORKER_URL) return { ok: false, message: 'Worker URL missing' };
+  const idToken = await auth.currentUser?.getIdToken();
+  if (!idToken) return { ok: false, message: 'Not signed in' };
+
+  try {
+    const res = await fetch(`${PUSH_WORKER_URL}/notice`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+      body: JSON.stringify(params),
+    });
+    return (await res.json()) as { ok: boolean; message?: string };
+  } catch (err) {
+    return { ok: false, message: String(err instanceof Error ? err.message : err) };
+  }
 }

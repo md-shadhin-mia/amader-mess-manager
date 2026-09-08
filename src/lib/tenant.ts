@@ -9,6 +9,9 @@ export const PLAN_MEMBER_LIMITS: Record<MessPlan, number> = { free: 10, pro: 100
 export const DEFAULT_TIMEZONE = 'Asia/Dhaka';
 export const JOIN_CODE_LENGTH = 10;
 
+export const DEFAULT_LUNCH_REMINDER_TIME = '08:30';
+export const DEFAULT_DINNER_REMINDER_TIME = '14:45';
+
 export interface Mess {
   id: string;
   name: string;
@@ -20,6 +23,26 @@ export interface Mess {
   timezone: string;
   join_code: string;
   allow_half_meals?: boolean;
+  lunch_reminder_time?: string;
+  lunch_reminder_enabled?: boolean;
+  dinner_reminder_time?: string;
+  dinner_reminder_enabled?: boolean;
+  bazar_reminder_time?: string;
+  bazar_reminder_enabled?: boolean;
+  created_at?: unknown;
+  updated_at?: unknown;
+}
+
+export type NoticePriority = 'normal' | 'important' | 'urgent';
+
+export interface Notice {
+  id: string;
+  title: string;
+  content: string;
+  priority: NoticePriority;
+  is_pinned?: boolean;
+  created_by_uid: string;
+  created_by_name: string;
   created_at?: unknown;
   updated_at?: unknown;
 }

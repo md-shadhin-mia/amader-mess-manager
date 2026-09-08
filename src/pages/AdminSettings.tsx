@@ -8,6 +8,7 @@ import { useMealTypes } from '../hooks/useMealTypes';
 import { renameMess } from '../lib/mess';
 import CategoryManager from '../components/admin/CategoryManager';
 import MealTypeManager from '../components/admin/MealTypeManager';
+import ReminderScheduleSettings from '../components/admin/ReminderScheduleSettings';
 import NotificationSettings from '../components/NotificationSettings';
 import AdminLayout from '../components/admin/AdminLayout';
 
@@ -135,6 +136,17 @@ export default function AdminSettings() {
             </h3>
           </div>
           <MealTypeManager mealTypes={mealTypes} />
+        </section>
+
+        {/* Reminder Schedules */}
+        <section className="space-y-3">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            <h3 className="text-sm font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">
+              মেস রিমাইন্ডার শিডিউল
+            </h3>
+          </div>
+          <ReminderScheduleSettings />
         </section>
 
         {/* Notification Settings */}

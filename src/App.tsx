@@ -10,6 +10,7 @@ import Messes from './pages/Messes';
 import SuperAdmin from './pages/SuperAdmin';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminMembers from './pages/AdminMembers';
+import AdminNotices from './pages/AdminNotices';
 import AdminPayments from './pages/AdminPayments';
 import AdminCosts from './pages/AdminCosts';
 import AdminSettings from './pages/AdminSettings';
@@ -79,6 +80,7 @@ function AppRoutes() {
       <Route path="/super" element={<PrivateRoute requireMess={false} superOnly><SuperAdmin /></PrivateRoute>} />
       <Route path="/admin" element={<PrivateRoute allowedRole="manager"><AdminDashboard /></PrivateRoute>} />
       <Route path="/admin/members" element={<PrivateRoute allowedRole="manager"><AdminMembers /></PrivateRoute>} />
+      <Route path="/admin/notices" element={<PrivateRoute allowedRole="manager"><AdminNotices /></PrivateRoute>} />
       <Route path="/admin/payments" element={<PrivateRoute allowedRole="manager"><AdminPayments /></PrivateRoute>} />
       <Route path="/admin/costs" element={<PrivateRoute allowedRole="manager"><AdminCosts /></PrivateRoute>} />
       <Route path="/admin/settings" element={<PrivateRoute allowedRole="manager"><AdminSettings /></PrivateRoute>} />

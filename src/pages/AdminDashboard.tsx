@@ -16,6 +16,7 @@ import { messDoc } from '../lib/paths';
 import { formatCount, formatTk } from '../lib/numbers';
 import CloseMonthDialog from '../components/admin/CloseMonthDialog';
 import AdminLayout from '../components/admin/AdminLayout';
+import NoticeBoardWidget from '../components/NoticeBoardWidget';
 
 export default function AdminDashboard() {
   const { messId: currentMessId, mess, member: userProfile } = useMess();
@@ -109,6 +110,8 @@ export default function AdminDashboard() {
       )}
 
       <div className="space-y-8">
+        <NoticeBoardWidget />
+
         {/* Welcome and KPI Snapshot */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Active Month */}

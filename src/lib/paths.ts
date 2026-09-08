@@ -12,12 +12,20 @@ export type TenantCollection =
   | 'daily_meals'
   | 'bazar_expenses'
   | 'payments'
-  | 'bazar_schedule';
+  | 'bazar_schedule'
+  | 'notices'
+  | 'notification_runs';
 
 export const messRef = (db: Firestore, messId: string): DocumentReference => doc(db, 'messes', messId);
 
 export const messCol = (db: Firestore, messId: string, name: TenantCollection): CollectionReference =>
   collection(db, 'messes', messId, name);
+
+export const noticesCol = (db: Firestore, messId: string): CollectionReference =>
+  messCol(db, messId, 'notices');
+
+export const noticeRef = (db: Firestore, messId: string, noticeId: string): DocumentReference =>
+  messDoc(db, messId, 'notices', noticeId);
 
 export const messDoc = (db: Firestore, messId: string, name: TenantCollection, id: string): DocumentReference =>
   doc(db, 'messes', messId, name, id);

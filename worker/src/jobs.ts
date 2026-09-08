@@ -1,48 +1,36 @@
 import type { Env } from './env';
 import { getAccessToken, parseServiceAccount } from './google-auth';
-import { FirestoreClient, type FirestoreDocument } from './firestore';
+import { FirestoreClient } from './firestore';
 import { sendPush, type PushMessage } from './fcm';
 
-export type JobName = 'meal_reminder' | 'bazar_reminder' | 'test';
+export type JobName = 'lunch_reminder' | 'dinner_reminder' | 'bazar_reminder' | 'test' | 'notice_broadcast';
 export type Trigger = 'cron' | 'manual';
 
-export interface MessReport {
-  name: string;
-  date: string;
-  sent: number;
-  failed: number;
-  skipped: number;
-}
-
-export interface JobReport {
-  job: JobName;
-  trigger: Trigger;
-  ran_at: string;
-  sent: number;
-  failed: number;
-  skipped: number;
-  per_mess: Record<string, MessReport>;
-  errors: string[];
-}
-
-interface MessDoc {
+export interface MessDoc {
   name?: string;
   status?: string;
   timezone?: string;
+  lunch_reminder_time?: string;
+  lunch_reminder_enabled?: boolean;
+  dinner_reminder_time?: string;
+  dinner_reminder_enabled?: boolean;
+  bazar_reminder_time?: string;
+  bazar_reminder_enabled?: boolean;
 }
 
-interface MemberDoc {
+export interface MemberDoc {
   uid?: string;
   name?: string;
   status?: string;
+  role?: string;
 }
 
-interface UserDoc {
+export interface UserDoc {
   name?: string;
   fcm_token?: string;
 }
 
-interface Recipient {
+export interface Recipient {
   messId: string;
   messName: string;
   uid: string;
@@ -50,9 +38,12 @@ interface Recipient {
   fcmToken: string;
 }
 
-const DEFAULT_TZ = 'Asia/Dhaka';
+export const DEFAULT_TZ = 'Asia/Dhaka';
+export const DEFAULT_LUNCH_REMINDER_TIME = '08:30';
+export const DEFAULT_DINNER_REMINDER_TIME = '14:45';
+export const DEFAULT_BAZAR_REMINDER_TIME = '08:00';
 
-/** Calendar date in a timezone, matching how the app stamps entries. */
+/** Calendar date in a timezone, matching how the app stamps entries (YYYY-MM-DD). */
 export function todayIsoDate(now = new Date(), timeZone = DEFAULT_TZ): string {
   try {
     const parts = new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(now);
@@ -61,6 +52,50 @@ export function todayIsoDate(now = new Date(), timeZone = DEFAULT_TZ): string {
   } catch {
     return todayIsoDate(now, DEFAULT_TZ);
   }
+}
+
+/** Local date and time details in a timezone. */
+export function timeInZone(now = new Date(), timeZone = DEFAULT_TZ): { date: string; time: string; minutes: number } {
+  try {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).formatToParts(now);
+    const get = (type: string) => parts.find((p) => p.type === type)?.value ?? '00';
+    const date = `${get('year')}-${get('month')}-${get('day')}`;
+    let hourStr = get('hour');
+    if (hourStr === '24') hourStr = '00';
+    const h = parseInt(hourStr, 10);
+    const m = parseInt(get('minute'), 10);
+    const time = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    const minutes = h * 60 + m;
+    return { date, time, minutes };
+  } catch {
+    return timeInZone(now, DEFAULT_TZ);
+  }
+}
+
+export function parseTimeToMinutes(timeStr: string): number {
+  const [hStr, mStr] = (timeStr || '').trim().split(':');
+  const h = parseInt(hStr || '0', 10);
+  const m = parseInt(mStr || '0', 10);
+  if (isNaN(h) || isNaN(m)) return 0;
+  return h * 60 + m;
+}
+
+/**
+ * Checks if current local minutes falls in the window [target, target + windowMinutes).
+ * Default window is 6 minutes to safely catch a 5-minute cron with minor scheduling drift.
+ */
+export function isDue(curMinutes: number, targetTimeStr: string, windowMinutes = 6): boolean {
+  const targetMinutes = parseTimeToMinutes(targetTimeStr);
+  const diff = curMinutes - targetMinutes;
+  return diff >= 0 && diff < windowMinutes;
 }
 
 /** 'projects/p/databases/(default)/documents/messes/abc/members/u1' → 'abc' */
@@ -76,197 +111,425 @@ export async function connect(env: Env): Promise<{ db: FirestoreClient; accessTo
   return { db: new FirestoreClient(env.FIREBASE_PROJECT_ID, accessToken), accessToken };
 }
 
-interface TenantContext {
-  /** Active messes with their "today" in their own timezone. */
-  messes: Map<string, { name: string; today: string }>;
-  /** Active members grouped by mess. */
-  membersByMess: Map<string, { uid: string; name: string }[]>;
-  /** Push tokens by uid (global account). */
-  tokens: Map<string, string>;
-  /** Distinct dates across all mess timezones (at most two). */
-  dates: string[];
+interface DispatchResult {
+  sent: number;
+  failed: number;
+  errors: string[];
 }
 
-async function loadTenants(db: FirestoreClient, env: Env): Promise<TenantContext> {
+async function dispatchPush(
+  env: Env,
+  db: FirestoreClient,
+  accessToken: string,
+  recipients: Recipient[],
+  message: (recipient: Recipient) => PushMessage,
+): Promise<DispatchResult> {
+  const link = (path: string) => new URL(path, env.APP_URL).toString();
+  const clearedTokens = new Set<string>();
+  let sent = 0;
+  let failed = 0;
+  const errors: string[] = [];
+
+  await Promise.all(
+    recipients.map(async (recipient) => {
+      const payload = message(recipient);
+      const result = await sendPush(accessToken, env.FIREBASE_PROJECT_ID, recipient.fcmToken, {
+        ...payload,
+        url: link(payload.url),
+      });
+
+      if (result.ok) {
+        sent += 1;
+        return;
+      }
+
+      failed += 1;
+      errors.push(`${recipient.messId}/${recipient.uid}: ${result.error}`);
+
+      if (result.unregistered && !clearedTokens.has(recipient.uid)) {
+        clearedTokens.add(recipient.uid);
+        // Clear stale/expired token
+        await db.update(`users/${recipient.uid}`, { fcm_token: null }).catch((err: unknown) => {
+          errors.push(`${recipient.uid}: could not clear stale token (${String(err)})`);
+        });
+      }
+    }),
+  );
+
+  return { sent, failed, errors };
+}
+
+export interface TickSummary {
+  ran_at: string;
+  messes_checked: number;
+  runs: {
+    messId: string;
+    messName: string;
+    job: JobName;
+    sent: number;
+    failed: number;
+    skipped: number;
+  }[];
+  errors: string[];
+}
+
+/**
+ * 5-minute cron tick.
+ * Evaluates all active messes in their respective timezones,
+ * checks if lunch, dinner, or bazar reminder is due,
+ * ensures idempotency per day, and dispatches FCM pushes.
+ */
+export async function runScheduledTick(env: Env): Promise<TickSummary> {
+  const summary: TickSummary = {
+    ran_at: new Date().toISOString(),
+    messes_checked: 0,
+    runs: [],
+    errors: [],
+  };
+
+  const { db, accessToken } = await connect(env);
   const now = new Date();
+
+  // Load all active messes, members, and user push tokens
   const [messDocs, memberDocs, userDocs] = await Promise.all([
     db.query<MessDoc>('messes', { field: 'status', op: 'EQUAL', value: 'active' }),
     db.query<MemberDoc>('members', { field: 'status', op: 'EQUAL', value: 'active' }, { allDescendants: true, limit: 5000 }),
     db.query<UserDoc>('users', { field: 'fcm_token', op: 'GREATER_THAN', value: '' }, { limit: 5000 }),
   ]);
 
-  const messes = new Map<string, { name: string; today: string }>();
-  for (const m of messDocs) {
-    messes.set(m.id, { name: m.data.name || m.id, today: todayIsoDate(now, m.data.timezone || env.TIMEZONE || DEFAULT_TZ) });
+  summary.messes_checked = messDocs.length;
+
+  const tokens = new Map<string, string>();
+  for (const user of userDocs) {
+    if (user.data.fcm_token) tokens.set(user.id, user.data.fcm_token);
   }
 
   const membersByMess = new Map<string, { uid: string; name: string }[]>();
   for (const member of memberDocs) {
     const messId = messIdFromName(member.name);
-    if (!messId || !messes.has(messId)) continue;
+    if (!messId) continue;
     const list = membersByMess.get(messId) || [];
     list.push({ uid: member.data.uid || member.id, name: member.data.name || 'Member' });
     membersByMess.set(messId, list);
   }
 
-  const tokens = new Map<string, string>();
-  for (const user of userDocs) if (user.data.fcm_token) tokens.set(user.id, user.data.fcm_token);
+  for (const mess of messDocs) {
+    const messId = mess.id;
+    const messName = mess.data.name || messId;
+    const tz = mess.data.timezone || env.TIMEZONE || DEFAULT_TZ;
+    const { date, time, minutes } = timeInZone(now, tz);
 
-  const dates = [...new Set([...messes.values()].map((m) => m.today))];
-  return { messes, membersByMess, tokens, dates };
+    const members = membersByMess.get(messId) || [];
+
+    // 1. Check Lunch Reminder
+    const lunchEnabled = mess.data.lunch_reminder_enabled !== false;
+    const lunchTime = mess.data.lunch_reminder_time || DEFAULT_LUNCH_REMINDER_TIME;
+    if (lunchEnabled && isDue(minutes, lunchTime)) {
+      await processMealReminder(env, db, accessToken, messId, messName, 'lunch_reminder', 'lunch', date, members, tokens, summary);
+    }
+
+    // 2. Check Dinner Reminder
+    const dinnerEnabled = mess.data.dinner_reminder_enabled !== false;
+    const dinnerTime = mess.data.dinner_reminder_time || DEFAULT_DINNER_REMINDER_TIME;
+    if (dinnerEnabled && isDue(minutes, dinnerTime)) {
+      await processMealReminder(env, db, accessToken, messId, messName, 'dinner_reminder', 'dinner', date, members, tokens, summary);
+    }
+
+    // 3. Check Bazar Reminder
+    const bazarEnabled = mess.data.bazar_reminder_enabled !== false;
+    const bazarTime = mess.data.bazar_reminder_time || DEFAULT_BAZAR_REMINDER_TIME;
+    if (bazarEnabled && isDue(minutes, bazarTime)) {
+      await processBazarReminder(env, db, accessToken, messId, messName, date, members, tokens, summary);
+    }
+  }
+
+  return summary;
 }
 
-async function dispatch(
+async function processMealReminder(
   env: Env,
   db: FirestoreClient,
   accessToken: string,
-  recipients: Recipient[],
-  message: (recipient: Recipient) => PushMessage,
-  report: JobReport,
-): Promise<JobReport> {
-  const link = (path: string) => new URL(path, env.APP_URL).toString();
-  const clearedTokens = new Set<string>();
+  messId: string,
+  messName: string,
+  jobName: 'lunch_reminder' | 'dinner_reminder',
+  mealKey: 'lunch' | 'dinner',
+  date: string,
+  members: { uid: string; name: string }[],
+  tokens: Map<string, string>,
+  summary: TickSummary,
+) {
+  const runId = `${jobName}_${date}`;
+  const runPath = `messes/${messId}/notification_runs/${runId}`;
 
-  await Promise.all(
-    recipients.map(async (recipient) => {
-      const payload = message(recipient);
-      const result = await sendPush(accessToken, env.FIREBASE_PROJECT_ID, recipient.fcmToken, { ...payload, url: link(payload.url) });
-      const per = report.per_mess[recipient.messId];
-      if (result.ok) {
-        report.sent += 1;
-        if (per) per.sent += 1;
-        return;
+  // Idempotency check: has this run already occurred today?
+  const existing = await db.get(runPath).catch(() => null);
+  if (existing) return;
+
+  // Mark in-flight immediately to prevent concurrent triggers
+  await db.create(`messes/${messId}/notification_runs`, {
+    job: jobName,
+    date,
+    status: 'in_progress',
+    started_at: new Date().toISOString(),
+  }, runId).catch((err) => {
+    summary.errors.push(`${messId}/${runId} lock failed: ${String(err)}`);
+  });
+
+  try {
+    // Check daily_meals for this mess today
+    const mealDocs = await db.query<{ date?: string; user_id?: string; meals?: Record<string, number> }>(
+      `daily_meals`,
+      { field: 'date', op: 'EQUAL', value: date },
+      { allDescendants: true, limit: 1000 },
+    ).catch(() => []);
+
+    // Find users who already entered this meal
+    const alreadyLoggedUsers = new Set<string>();
+    for (const meal of mealDocs) {
+      const docMessId = messIdFromName(meal.name);
+      if (docMessId !== messId) continue;
+      const uid = meal.data.user_id;
+      if (!uid) continue;
+
+      // If user's meal map has this meal key explicitly defined
+      const mealMap = meal.data.meals;
+      if (mealMap && mealMap[mealKey] !== undefined && mealMap[mealKey] !== null) {
+        alreadyLoggedUsers.add(uid);
       }
-      report.failed += 1;
-      if (per) per.failed += 1;
-      report.errors.push(`${recipient.messId}/${recipient.uid}: ${result.error}`);
-      if (result.unregistered && !clearedTokens.has(recipient.uid)) {
-        clearedTokens.add(recipient.uid);
-        // Browser unsubscribed or token expired: drop it so we stop retrying.
-        await db.update(`users/${recipient.uid}`, { fcm_token: null }).catch((err: unknown) => {
-          report.errors.push(`${recipient.uid}: could not clear stale token (${String(err)})`);
-        });
-      }
-    }),
-  );
+    }
 
-  await db
-    .create('notification_logs', {
-      job: report.job,
-      trigger: report.trigger,
-      ran_at: new Date(report.ran_at),
-      sent: report.sent,
-      failed: report.failed,
-      skipped: report.skipped,
-      per_mess: report.per_mess,
-      errors: report.errors.slice(0, 20),
-    })
-    .catch((err: unknown) => console.error('Could not write notification log', err));
+    const recipients: Recipient[] = [];
+    let skipped = 0;
 
-  return report;
-}
-
-function newReport(job: JobName, trigger: Trigger): JobReport {
-  return { job, trigger, ran_at: new Date().toISOString(), sent: 0, failed: 0, skipped: 0, per_mess: {}, errors: [] };
-}
-
-function initPerMess(report: JobReport, ctx: TenantContext) {
-  for (const [messId, mess] of ctx.messes) report.per_mess[messId] = { name: mess.name, date: mess.today, sent: 0, failed: 0, skipped: 0 };
-}
-
-/** Evening reminder to every member with a push token who has not logged a meal today, in every active mess. */
-export async function runMealReminder(env: Env, trigger: Trigger): Promise<JobReport> {
-  const report = newReport('meal_reminder', trigger);
-  const { db, accessToken } = await connect(env);
-  const ctx = await loadTenants(db, env);
-  initPerMess(report, ctx);
-
-  const mealDocs = ctx.dates.length
-    ? await db.query<{ user_id?: string; date?: string }>('daily_meals', { field: 'date', op: 'IN', value: ctx.dates }, { allDescendants: true, limit: 5000 })
-    : [];
-  const logged = new Set<string>();
-  for (const meal of mealDocs) {
-    const messId = messIdFromName(meal.name);
-    const mess = messId ? ctx.messes.get(messId) : null;
-    if (messId && mess && meal.data.user_id && meal.data.date === mess.today) logged.add(`${messId}:${meal.data.user_id}`);
-  }
-
-  const recipients: Recipient[] = [];
-  for (const [messId, mess] of ctx.messes) {
-    for (const member of ctx.membersByMess.get(messId) || []) {
-      const token = ctx.tokens.get(member.uid);
-      if (!token) continue;
-      if (logged.has(`${messId}:${member.uid}`)) {
-        report.skipped += 1;
-        report.per_mess[messId].skipped += 1;
+    for (const member of members) {
+      const token = tokens.get(member.uid);
+      if (!token) {
+        skipped += 1;
         continue;
       }
-      recipients.push({ messId, messName: mess.name, uid: member.uid, name: member.name, fcmToken: token });
+      if (alreadyLoggedUsers.has(member.uid)) {
+        skipped += 1;
+        continue;
+      }
+      recipients.push({ messId, messName, uid: member.uid, name: member.name, fcmToken: token });
     }
-  }
 
-  return dispatch(env, db, accessToken, recipients, (r) => ({
-    title: `আজকের মিল এন্ট্রি দিন 🍛 · ${r.messName}`,
-    body: `${r.name}, আজকের মিল এখনো যুক্ত হয়নি। এখনই এন্ট্রি দিন।`,
-    url: '/member/entry',
-    tag: `meal-${r.messId}-${ctx.messes.get(r.messId)?.today ?? ''}`,
-  }), report);
+    const isLunch = mealKey === 'lunch';
+    const title = isLunch ? `দুপুরের মিল এন্ট্রি দিন ☀️ · ${messName}` : `রাতের মিল এন্ট্রি দিন 🌙 · ${messName}`;
+    const mealNameBn = isLunch ? 'দুপুরের' : 'রাতের';
+
+    const result = await dispatchPush(env, db, accessToken, recipients, (r) => ({
+      title,
+      body: `${r.name}, আজকের ${mealNameBn} মিল কাউন্ট এখনো কনফার্ম করেননি। এখনই এন্ট্রি দিন।`,
+      url: '/member/entry',
+      tag: `${mealKey}-${messId}-${date}`,
+    }));
+
+    // Update notification run doc
+    await db.update(runPath, {
+      status: 'completed',
+      sent: result.sent,
+      failed: result.failed,
+      skipped,
+      completed_at: new Date().toISOString(),
+    }).catch(() => {});
+
+    // Log globally
+    await db.create('notification_logs', {
+      job: jobName,
+      mess_id: messId,
+      mess_name: messName,
+      date,
+      sent: result.sent,
+      failed: result.failed,
+      skipped,
+      ran_at: new Date().toISOString(),
+    }).catch(() => {});
+
+    summary.runs.push({
+      messId,
+      messName,
+      job: jobName,
+      sent: result.sent,
+      failed: result.failed,
+      skipped,
+    });
+    if (result.errors.length) summary.errors.push(...result.errors);
+  } catch (err) {
+    summary.errors.push(`${messId}/${runId} execution error: ${String(err)}`);
+  }
 }
 
-/** Morning reminder to whoever is assigned to today's bazar, in every active mess. */
-export async function runBazarReminder(env: Env, trigger: Trigger): Promise<JobReport> {
-  const report = newReport('bazar_reminder', trigger);
-  const { db, accessToken } = await connect(env);
-  const ctx = await loadTenants(db, env);
-  initPerMess(report, ctx);
+async function processBazarReminder(
+  env: Env,
+  db: FirestoreClient,
+  accessToken: string,
+  messId: string,
+  messName: string,
+  date: string,
+  members: { uid: string; name: string }[],
+  tokens: Map<string, string>,
+  summary: TickSummary,
+) {
+  const runId = `bazar_reminder_${date}`;
+  const runPath = `messes/${messId}/notification_runs/${runId}`;
 
-  const schedule = ctx.dates.length
-    ? await db.query<{ assigned_user_id?: string; date?: string }>('bazar_schedule', { field: 'date', op: 'IN', value: ctx.dates }, { allDescendants: true, limit: 5000 })
-    : [];
+  const existing = await db.get(runPath).catch(() => null);
+  if (existing) return;
+
+  await db.create(`messes/${messId}/notification_runs`, {
+    job: 'bazar_reminder',
+    date,
+    status: 'in_progress',
+    started_at: new Date().toISOString(),
+  }, runId).catch((err) => {
+    summary.errors.push(`${messId}/${runId} lock failed: ${String(err)}`);
+  });
+
+  try {
+    const scheduleDocs = await db.query<{ date?: string; assigned_user_id?: string }>(
+      `bazar_schedule`,
+      { field: 'date', op: 'EQUAL', value: date },
+      { allDescendants: true, limit: 500 },
+    ).catch(() => []);
+
+    const recipients: Recipient[] = [];
+    let skipped = 0;
+
+    for (const doc of scheduleDocs) {
+      const docMessId = messIdFromName(doc.name);
+      if (docMessId !== messId) continue;
+      const uid = doc.data.assigned_user_id;
+      if (!uid) continue;
+
+      const member = members.find((m) => m.uid === uid);
+      const token = tokens.get(uid);
+      if (!member || !token) {
+        skipped += 1;
+        continue;
+      }
+      recipients.push({ messId, messName, uid, name: member.name, fcmToken: token });
+    }
+
+    const result = await dispatchPush(env, db, accessToken, recipients, (r) => ({
+      title: `আজ আপনার বাজারের দিন 🛒 · ${messName}`,
+      body: `${r.name}, আজকের বাজারের দায়িত্ব আপনার। বাজার খরচ এন্ট্রি দিতে ভুলবেন না।`,
+      url: '/member/entry',
+      tag: `bazar-${messId}-${date}`,
+    }));
+
+    await db.update(runPath, {
+      status: 'completed',
+      sent: result.sent,
+      failed: result.failed,
+      skipped,
+      completed_at: new Date().toISOString(),
+    }).catch(() => {});
+
+    await db.create('notification_logs', {
+      job: 'bazar_reminder',
+      mess_id: messId,
+      mess_name: messName,
+      date,
+      sent: result.sent,
+      failed: result.failed,
+      skipped,
+      ran_at: new Date().toISOString(),
+    }).catch(() => {});
+
+    summary.runs.push({
+      messId,
+      messName,
+      job: 'bazar_reminder',
+      sent: result.sent,
+      failed: result.failed,
+      skipped,
+    });
+    if (result.errors.length) summary.errors.push(...result.errors);
+  } catch (err) {
+    summary.errors.push(`${messId}/${runId} execution error: ${String(err)}`);
+  }
+}
+
+/** Broadcasts a notice notification to all members of a specific mess. */
+export async function runNoticeBroadcast(
+  env: Env,
+  messId: string,
+  notice: { id?: string; title: string; content: string; priority?: string },
+): Promise<{ ok: boolean; sent: number; failed: number; errors: string[] }> {
+  const { db, accessToken } = await connect(env);
+
+  const messDoc = await db.get<MessDoc>(`messes/${messId}`);
+  if (!messDoc) return { ok: false, sent: 0, failed: 0, errors: ['Mess not found'] };
+
+  const messName = messDoc.data.name || messId;
+
+  // Load members of this mess
+  const memberDocs = await db.query<MemberDoc>(`messes/${messId}/members`, {
+    field: 'status',
+    op: 'EQUAL',
+    value: 'active',
+  });
+
+  const uids = memberDocs.map((m) => m.data.uid || m.id);
+  if (uids.length === 0) return { ok: true, sent: 0, failed: 0, errors: [] };
+
+  // Load tokens for these users
+  const userDocs = await db.query<UserDoc>('users', { field: 'fcm_token', op: 'GREATER_THAN', value: '' }, { limit: 5000 });
+  const tokenMap = new Map<string, string>();
+  for (const u of userDocs) if (u.data.fcm_token) tokenMap.set(u.id, u.data.fcm_token);
 
   const recipients: Recipient[] = [];
-  const seen = new Set<string>();
-  for (const entry of schedule) {
-    const messId = messIdFromName(entry.name);
-    const mess = messId ? ctx.messes.get(messId) : null;
-    const uid = entry.data.assigned_user_id;
-    if (!messId || !mess || !uid || entry.data.date !== mess.today || seen.has(`${messId}:${uid}`)) continue;
-    seen.add(`${messId}:${uid}`);
-    const member = (ctx.membersByMess.get(messId) || []).find((m) => m.uid === uid);
-    const token = ctx.tokens.get(uid);
-    if (!member || !token) {
-      report.skipped += 1;
-      report.per_mess[messId].skipped += 1;
-      continue;
-    }
-    recipients.push({ messId, messName: mess.name, uid, name: member.name, fcmToken: token });
+  for (const m of memberDocs) {
+    const uid = m.data.uid || m.id;
+    const token = tokenMap.get(uid);
+    if (!token) continue;
+    recipients.push({
+      messId,
+      messName,
+      uid,
+      name: m.data.name || 'Member',
+      fcmToken: token,
+    });
   }
 
-  return dispatch(env, db, accessToken, recipients, (r) => ({
-    title: `আজ আপনার বাজারের দিন 🛒 · ${r.messName}`,
-    body: `${r.name}, আজকের বাজারের দায়িত্ব আপনার। খরচ এন্ট্রি দিতে ভুলবেন না।`,
-    url: '/member/entry',
-    tag: `bazar-${r.messId}-${ctx.messes.get(r.messId)?.today ?? ''}`,
-  }), report);
+  const priorityLabel = notice.priority === 'urgent' ? '🚨 [জরুরি]' : notice.priority === 'important' ? '⚠️ [গুরুত্বপূর্ণ]' : '📢';
+  const cleanSnippet = (notice.content || '').replace(/\s+/g, ' ').trim().slice(0, 100);
+
+  const result = await dispatchPush(env, db, accessToken, recipients, (r) => ({
+    title: `${priorityLabel} ${notice.title} · ${r.messName}`,
+    body: cleanSnippet || notice.title,
+    url: '/',
+    tag: `notice-${messId}-${notice.id || Date.now()}`,
+  }));
+
+  return { ok: true, sent: result.sent, failed: result.failed, errors: result.errors };
 }
 
-/** One push to a single user's registered browser, used by the in-app "Send test notification" button. */
-export async function runTestPush(env: Env, uid: string): Promise<JobReport & { reason?: string }> {
-  const report = newReport('test', 'manual');
+/** One push to a single user's registered browser, used by in-app test button. */
+export async function runTestPush(env: Env, uid: string): Promise<{ ok: boolean; reason?: string; error?: string }> {
   const { db, accessToken } = await connect(env);
 
   const user = await db.get<UserDoc>(`users/${uid}`);
   if (!user?.data.fcm_token) {
-    report.skipped = 1;
-    return { ...report, reason: 'no-token' };
+    return { ok: false, reason: 'no-token' };
   }
-  report.per_mess.test = { name: 'test', date: todayIsoDate(), sent: 0, failed: 0, skipped: 0 };
-  const recipient: Recipient = { messId: 'test', messName: '', uid, name: user.data.name || 'Member', fcmToken: user.data.fcm_token };
 
-  return dispatch(env, db, accessToken, [recipient], () => ({
+  const recipient: Recipient = {
+    messId: 'test',
+    messName: 'আমাদের মেস',
+    uid,
+    name: user.data.name || 'Member',
+    fcmToken: user.data.fcm_token,
+  };
+
+  const result = await dispatchPush(env, db, accessToken, [recipient], () => ({
     title: 'টেস্ট নোটিফিকেশন ✅',
-    body: `${recipient.name}, পুশ নোটিফিকেশন ঠিকমতো কাজ করছে। (${new Date().toISOString().slice(11, 16)} UTC)`,
+    body: `${recipient.name}, পুশ নোটিফিকেশন ঠিকমতো কাজ করছে।`,
     url: '/',
     tag: 'test',
-  }), report);
+  }));
+
+  return { ok: result.sent > 0, error: result.errors[0] };
 }
