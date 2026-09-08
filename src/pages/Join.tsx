@@ -18,9 +18,16 @@ export default function Join() {
   const navigate = useNavigate();
 
   const [joining, setJoining] = useState(false);
+  const [joinedSuccess, setJoinedSuccess] = useState<string | null>(null);
   const [signInLoading, setSignInLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const hasAttempted = useRef(false);
+
+  useEffect(() => {
+    if (code) {
+      sessionStorage.setItem('pending_join_code', code);
+    }
+  }, [code]);
 
   useEffect(() => {
     if (authLoading || !currentUser || !code || hasAttempted.current) return;
@@ -37,8 +44,12 @@ export default function Join() {
 
     joinMess(db, person, code, account)
       .then((joined) => {
+        sessionStorage.removeItem('pending_join_code');
         toast(`${t('messJoined')}: ${joined.name}`);
-        navigate('/');
+        setJoinedSuccess(joined.name);
+        setTimeout(() => {
+          navigate('/member', { replace: true });
+        }, 500);
       })
       .catch((err) => {
         console.error('Direct join failed', err);
@@ -121,7 +132,19 @@ export default function Join() {
             </div>
           )}
 
-          {joining || authLoading ? (
+          {joinedSuccess ? (
+            <div className="py-6 flex flex-col items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center text-green-600 dark:text-green-300 text-2xl font-bold">
+                ✓
+              </div>
+              <p className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                {joinedSuccess}
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {t('messJoined')}
+              </p>
+            </div>
+          ) : joining || authLoading ? (
             <div className="py-6 flex flex-col items-center gap-3">
               <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin" />
               <p className="text-sm text-gray-600 dark:text-gray-300 font-medium">{t('joiningMess')}</p>

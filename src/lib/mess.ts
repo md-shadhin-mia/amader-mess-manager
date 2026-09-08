@@ -76,6 +76,15 @@ export async function joinMess(db: Firestore, person: Person, rawCode: string, a
     return { messId, name: account.messes[messId].name };
   }
 
+  const existingMemberSnap = await getDoc(memberRef(db, messId, person.uid));
+  if (existingMemberSnap.exists() && existingMemberSnap.data()?.status === 'active') {
+    await updateDoc(userRef(db, person.uid), {
+      [`messes.${messId}`]: { name: mess_name },
+      current_mess_id: messId,
+    });
+    return { messId, name: mess_name };
+  }
+
   const batch = writeBatch(db);
   batch.set(memberRef(db, messId, person.uid), {
     uid: person.uid,
