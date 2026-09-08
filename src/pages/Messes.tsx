@@ -9,6 +9,7 @@ import { useToast } from '../contexts/ToastContext';
 import ThemeToggle from '../components/ThemeToggle';
 import Avatar from '../components/Avatar';
 import { createMess, joinMess, MessError } from '../lib/mess';
+import { ShieldCheck } from 'lucide-react';
 import { DEFAULT_TIMEZONE, normalizeJoinCode } from '../lib/tenant';
 
 /**
@@ -103,7 +104,15 @@ export default function Messes() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          {isSuperAdmin && <Link to="/super" className="text-sm font-medium text-purple-700 dark:text-purple-400 hover:text-purple-900 dark:hover:text-purple-300">{t('superAdmin')}</Link>}
+          {isSuperAdmin && (
+            <Link
+              to="/super"
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-purple-700 dark:text-purple-400 hover:text-purple-900 dark:hover:text-purple-300"
+            >
+              <ShieldCheck className="w-4 h-4" />
+              <span>{t('superAdmin')}</span>
+            </Link>
+          )}
           <ThemeToggle />
           <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-1 flex">
             <button onClick={() => setLang('bn')} className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${lang === 'bn' ? 'bg-white dark:bg-gray-600 shadow text-blue-700 dark:text-blue-300' : 'text-gray-500 dark:text-gray-400'}`}>বাংলা</button>

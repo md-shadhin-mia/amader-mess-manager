@@ -4,6 +4,7 @@ import { auth } from '../../firebase';
 import { useAuth } from '../../AuthContext';
 import { useMess } from '../../contexts/MessContext';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { Utensils, User, LogOut, Languages, ArrowLeftRight, ShieldCheck } from 'lucide-react';
 import ThemeToggle from '../ThemeToggle';
 import Avatar from '../Avatar';
 import ProfileModal from '../ProfileModal';
@@ -124,44 +125,54 @@ export default function AdminLayout({
 
       {/* Main Top Header */}
       <header className="bg-slate-900 dark:bg-gray-900 text-white border-b border-slate-800 sticky top-0 z-30 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center py-3.5 gap-3">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between py-2.5 sm:py-3 gap-2">
             
             {/* Left: Mess identity and Manager quick badge */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
               <button
                 onClick={() => setShowProfile(true)}
-                className="relative group focus:outline-none"
+                className="relative group focus:outline-none shrink-0"
                 title={t('editProfile')}
               >
                 <Avatar name={userProfile?.name} photoUrl={userProfile?.photo_url} size="md" />
-                <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-slate-900 rounded-full" />
+                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-slate-900 rounded-full" />
               </button>
 
-              <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="text-lg font-bold tracking-tight text-white">
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <h1 className="text-base sm:text-lg font-bold tracking-tight text-white truncate">
                     {mess?.name ?? t('adminPanel')}
                   </h1>
                   {mess?.plan === 'pro' && (
-                    <span className="bg-purple-600/30 text-purple-300 border border-purple-500/40 text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                    <span className="bg-purple-600/30 text-purple-300 border border-purple-500/40 text-[10px] font-semibold px-1.5 py-0.2 rounded-full shrink-0">
                       PRO
                     </span>
                   )}
                 </div>
-                <div className="flex flex-wrap items-center gap-2 text-xs text-slate-300 dark:text-slate-400 mt-0.5">
-                  <span>
+                <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 text-xs text-slate-300 dark:text-slate-400 mt-0.5">
+                  <span className="truncate max-w-[120px] sm:max-w-none">
                     {t('manager')}: <strong className="text-slate-100">{userProfile?.name}</strong>
                   </span>
                   <span>•</span>
-                  <Link to="/messes" className="hover:text-blue-300 underline transition-colors">
-                    {t('switchMess')}
+                  <Link
+                    to="/messes"
+                    className="inline-flex items-center gap-1 hover:text-blue-300 underline transition-colors shrink-0"
+                    title={t('switchMess')}
+                  >
+                    <ArrowLeftRight className="w-3 h-3" />
+                    <span>{t('switchMess')}</span>
                   </Link>
                   {isSuperAdmin && (
                     <>
                       <span>•</span>
-                      <Link to="/super" className="hover:text-amber-300 underline transition-colors">
-                        {t('superAdmin')}
+                      <Link
+                        to="/super"
+                        className="inline-flex items-center gap-1 text-amber-300/90 hover:text-amber-200 underline transition-colors shrink-0"
+                        title={t('superAdmin')}
+                      >
+                        <ShieldCheck className="w-3 h-3 text-amber-400" />
+                        <span>{t('superAdmin')}</span>
                       </Link>
                     </>
                   )}
@@ -169,50 +180,53 @@ export default function AdminLayout({
               </div>
             </div>
 
-            {/* Right: Actions, utilities and Profile */}
-            <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-between md:justify-end pt-1 md:pt-0">
+            {/* Right: Actions, utilities and Profile (Icon-only) */}
+            <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+              {/* Meal Entry */}
               <button
+                type="button"
                 onClick={() => navigate('/member/entry')}
-                className="text-xs font-medium bg-slate-800 hover:bg-slate-700 dark:bg-gray-800 dark:hover:bg-gray-700 text-slate-200 hover:text-white px-3 py-1.5 rounded-lg border border-slate-700 transition-colors flex items-center gap-1.5"
+                title={t('myMealEntry')}
+                aria-label={t('myMealEntry')}
+                className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg bg-slate-800 hover:bg-slate-700 dark:bg-gray-800 dark:hover:bg-gray-700 text-slate-200 hover:text-white border border-slate-700 transition-colors"
               >
-                <span>🍽️</span>
-                <span>{t('myMealEntry')}</span>
+                <Utensils className="w-4 h-4" />
               </button>
 
+              {/* Edit Profile */}
               <button
+                type="button"
                 onClick={() => setShowProfile(true)}
-                className="text-xs font-medium text-slate-300 hover:text-white px-2.5 py-1.5 rounded-lg hover:bg-slate-800 transition-colors"
+                title={t('editProfile')}
+                aria-label={t('editProfile')}
+                className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 dark:hover:bg-gray-800 border border-transparent hover:border-slate-700 transition-colors"
               >
-                {t('editProfile')}
+                <User className="w-4 h-4" />
               </button>
 
-              <ThemeToggle className="text-slate-300 hover:text-white hover:bg-slate-800" />
+              {/* Theme Toggle */}
+              <ThemeToggle className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-800 dark:hover:bg-gray-800 border border-transparent hover:border-slate-700 p-0" />
 
               {/* Language Switcher */}
-              <div className="bg-slate-800 dark:bg-gray-800 border border-slate-700 rounded-lg p-0.5 flex">
-                <button
-                  onClick={() => setLang('bn')}
-                  className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
-                    lang === 'bn' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  বাং
-                </button>
-                <button
-                  onClick={() => setLang('en')}
-                  className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
-                    lang === 'en' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  EN
-                </button>
-              </div>
-
               <button
-                onClick={() => auth.signOut()}
-                className="text-xs font-medium bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/30 px-3 py-1.5 rounded-lg transition-colors"
+                type="button"
+                onClick={() => setLang(lang === 'bn' ? 'en' : 'bn')}
+                title={lang === 'bn' ? 'English (EN)' : 'বাংলা (BN)'}
+                aria-label="Toggle language"
+                className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 dark:hover:bg-gray-800 border border-transparent hover:border-slate-700 transition-colors"
               >
-                {t('signOut')}
+                <Languages className="w-4 h-4" />
+              </button>
+
+              {/* Sign Out */}
+              <button
+                type="button"
+                onClick={() => auth.signOut()}
+                title={t('signOut')}
+                aria-label={t('signOut')}
+                className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/30 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
               </button>
             </div>
 
